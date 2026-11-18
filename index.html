@@ -72,7 +72,7 @@ const medsText = b => b.medsText ? b.medsText+(b.medsWhere?' ('+b.medsWhere+')':
 const BANDS = ['0001','0002'];
 const SEED = { // 예시 2개: 0001은 발표 때 직접 등록, 0002는 미리 등록된 예시
   '0001':{registered:false},
-  '0002':{registered:true,name:'김민준',phone:'010-0000-0000',zoneId:'SEAT-2F',seatDetail:'B구역 5열 12번',conditions:['심장 질환'],consent:true}
+  '0002':{registered:true,name:'김민준',phone:'010-0000-0000',zoneId:'SEAT-2F',seatDetail:'B구역 5열 12번',conditions:['심장 질환'],consent:true,keepConsent:true,recallCode:'482915'} // 지난 회차에 보관 동의한 예시
 };
 const GUIDE = {
   '당뇨':['대처 안내: 저혈당 의심','의식이 또렷하면 혈당 확인 후 당질 15g, 15분 뒤 다시 확인','* 의식이 나빠지거나 숨쉬기 힘들면 즉시 119'],
@@ -104,7 +104,7 @@ function cardRows(r,b){ // 이 신고에 맞는 줄을 위로
   return [...CARD.filter(x=>hit.has(x[0])).map(x=>[...x,true]), ...CARD.filter(x=>!hit.has(x[0])).map(x=>[...x,false])];
 }
 const STATUS = {received:'접수',dispatched:'출동 중',verified:'도착·확인',closed:'종료',cancelled:'취소됨'};
-const seedBand = id => Object.assign({registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],medsText:'',medsWhere:'',consent:false}, SEED[id]||{});
+const seedBand = id => Object.assign({registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],medsText:'',medsWhere:'',consent:false,keepConsent:false,recallCode:''}, SEED[id]||{});
 
 // ===== 유틸 =====
 const $ = id => document.getElementById(id);
@@ -249,6 +249,12 @@ A1(p){ return `<div class="${COL}">${lhdr('응급 팔찌 등록',pill('1 / 3','t
     </div>
     <div class="w-full flex flex-col gap-2">
       <button class="${BTN_RED}" data-act="startReg">등록 시작 ${ic('arrow-right','text-sm')}</button>
+      ${p.recall?`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-2">
+        <p class="text-sm font-bold text-slate-800">다른 회차에서 받은 불러오기 코드</p>
+        <div class="flex gap-2"><input type="text" id="recall" inputmode="numeric" maxlength="6" placeholder="6자리 코드" class="flex-1 min-w-0 h-12 px-4 rounded-xl border border-slate-300 text-lg tracking-widest text-slate-900 bg-white">
+          <button class="px-5 rounded-xl bg-slate-900 text-white font-bold" data-act="recall">불러오기</button></div>
+        <p class="text-xs text-slate-400">시연용 예시 코드: 482915</p></div>`
+      :`<button class="w-full min-h-[48px] rounded-2xl border-2 border-slate-200 text-slate-700 text-sm font-bold" data-act="recallOpen">${ic('rotate')} 다른 회차에서 받은 코드가 있어요</button>`}
       <button class="w-full min-h-[48px] py-3 text-slate-500 hover:text-slate-700 text-sm font-medium underline-offset-4 hover:underline" data-act="toReport">응급 신고하기 — 입력하지 않아도 신고는 똑같이 돼요</button>${foot}
     </div>
   </div></div>`; },
@@ -264,7 +270,15 @@ A2(p){
         <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-slate-500 tracking-wider">연결된 팔찌 ID</span><span class="text-xs font-bold text-brand bg-red-50 px-2 py-0.5 rounded">QR 등록됨</span></div>
         <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white shrink-0">★</div>
           <div class="min-w-0"><p class="text-sm font-bold text-slate-800">STARLIGHT LIVE BAND #${esc(p.band)}</p><p class="text-xs text-slate-500">좌석: ${esc(seatLabel(b)||'미입력')}</p></div></div>
-      </div></div>
+      </div>
+      ${b.recallCode?`<div class="mt-4 bg-red-50/60 border border-red-200 rounded-2xl p-5 text-center">
+          <p class="text-xs font-bold text-brand mb-2">불러오기 코드</p>
+          <p class="text-3xl font-black tracking-[0.3em] text-slate-900 tabular-nums">${esc(b.recallCode.slice(0,3))} ${esc(b.recallCode.slice(3))}</p>
+          <p class="text-xs text-slate-500 mt-2">다음 회차에 이 코드를 넣으면 다시 입력하지 않아도 돼요.<br>코드를 잃어버리면 문자 인증으로 불러올 수 있어요 (시연에서는 만들지 않음)</p></div>`
+        :`<div class="mt-4 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
+          <div><p class="text-sm font-bold text-slate-800">다른 회차도 관람하나요?</p><p class="text-xs text-slate-500 mt-0.5">정보 보관에 동의하면 6자리 불러오기 코드를 드려요</p></div>
+          <button class="w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="keep">보관에 동의하고 코드 받기</button></div>`}
+      </div>
       <div><p class="text-sm text-slate-500 text-center font-medium">응급 상황이 생기면 팔찌 QR을 다시 찍으세요</p>${foot}</div>
     </div></div>`; }
   const F=p.f, seat=F.zoneId&&!ZONES[F.zoneId].stand;
@@ -577,6 +591,15 @@ async function staffVerify(bandId){
 const ACT = {
   startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
   backA1(){ go('A1',{band:V.p.band}); },
+  recallOpen(){ V.p.recall=true; render(); const i=$('recall'); i&&i.focus(); },
+  recall(){ const code=($('recall').value||'').replace(/\D/g,'');
+    const src=BANDS.map(id=>[id,getBand(id)]).find(([id,b])=>id!==V.p.band&&b.keepConsent&&b.recallCode===code);
+    if(code.length!==6||!src) return toast('코드를 찾지 못했어요');
+    const b=src[1];
+    go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:null,seatDetail:'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}});
+    toast('정보를 불러왔어요. 오늘 좌석만 골라 주세요'); },
+  async keep(){ let code; do{ code=String(Math.floor(100000+Math.random()*900000)); }while(BANDS.some(id=>getBand(id).recallCode===code));
+    await saveBand(V.p.band,{keepConsent:true,recallCode:code}); render(); },
   call119(){ toast('시연용: 실제로 전화가 걸리지 않습니다'); },
   toReport(){ openReportFor({band:V.p.band}); },
   fzone(z){ V.p.f.zoneId=z; render(); },
