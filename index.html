@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>STARLIGHT 응급 팔찌 시연</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ▼ Firebase 콘솔에서 받은 설정을 여기에 붙여 넣으세요 (비어 있으면 이 기기 안에서만 동작)
+const FIREBASE_CONFIG = null;
+</script>
+<style>
+/* Layout: 폰 한 열(최대 480px), 모니터만 넓게. 관객=밝은 시안, 스태프·모니터=어두운 공연장용으로 고정 */
+:root{
+  --red:#C8102E; --on-red:#FFFFFF; --ink:#1A1D23; --sub:#5B6270; --line:#E2E4EA;
+  --paper:#FFFFFF; --soft:#F4F5F7; --warnbg:#FCE9EC; --amber:#B45309; --amberbg:#FEF3C7;
+  --green:#15803D; --greenbg:#DCFCE7;
+  --font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  color-scheme:light;
+}
+body.dark{
+  --red:#FF4D5E; --ink:#F2F4F7; --sub:#A0A8B6; --line:#2B313C; --paper:#0E1116; --soft:#181C24;
+  --warnbg:#3B1219; --amber:#FBBF24; --amberbg:#3A2A0A; --green:#4ADE80; --greenbg:#0F2E1C; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body.flash{animation:flash .5s 3}
+@keyframes flash{50%{box-shadow:inset 0 0 0 10px var(--red)}}
+@media (prefers-reduced-motion:reduce){body.flash{animation:none}}
+.wrap{max-width:480px;margin:0 auto;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.wrap.wide{max-width:1200px}
+.brand{font-weight:800;font-size:15px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.brand i{font-style:normal;color:var(--red)}
+h1{font-size:24px;line-height:1.3;margin:0;text-wrap:balance}
+p{margin:0}
+.sub{color:var(--sub);font-size:15px}
+.small{font-size:13px;color:var(--sub)}
+.foot{font-size:12px;color:var(--sub);text-align:center;margin-top:8px}
+.card{background:var(--soft);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card.line{background:transparent;border:1px solid var(--line)}
+.warn{background:var(--warnbg);color:var(--red);font-weight:800;border-radius:12px;padding:10px 14px}
+.big{font-size:22px;font-weight:900;line-height:1.35}
+.btn{appearance:none;border:0;border-radius:14px;min-height:54px;padding:12px 16px;font:inherit;font-size:17px;font-weight:800;background:var(--soft);color:var(--ink);cursor:pointer;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.btn small{font-size:13px;font-weight:500;opacity:.85}
+.btn.red{background:var(--red);color:var(--on-red)}
+.btn.out{background:transparent;border:2px solid var(--line)}
+.btn.green{background:var(--green);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.chip:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.sos{width:180px;height:180px;border-radius:50%;margin:4px auto;font-size:32px;box-shadow:0 0 0 10px var(--warnbg)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{appearance:none;font:inherit;font-size:15px;font-weight:700;min-height:46px;padding:8px 12px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--warnbg);color:var(--red)}
+.badge{display:inline-block;font-weight:900;padding:4px 10px;border-radius:8px;font-size:14px}
+.b-urgent{background:var(--red);color:var(--on-red)}
+.b-check{background:var(--amberbg);color:var(--amber)}
+.b-gray{background:var(--soft);color:var(--sub);border:1px solid var(--line)}
+.b-ok{background:var(--greenbg);color:var(--green)}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
+input[type=text]{font:inherit;font-size:17px;min-height:48px;padding:8px 12px;border-radius:10px;border:2px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.consent input{width:24px;height:24px;flex:none;margin-top:2px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+.kv dt{color:var(--sub)} .kv dd{margin:0;font-weight:700;min-width:0}
+ul.g{margin:0;padding-left:20px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
+.modal .in{background:var(--paper);width:100%;border-top:3px solid var(--red);border-radius:18px 18px 0 0;max-height:90vh;overflow:auto;padding-block:16px calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal .box{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+pre.msg{white-space:pre-wrap;font:inherit;font-size:15px;background:var(--soft);border-radius:10px;padding:12px;margin:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:12px;font-weight:700;z-index:30;max-width:calc(100% - 32px);text-align:center}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th{text-align:left;color:var(--sub);font-size:13px;font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.done td{opacity:.45}
+tr.new td{background:var(--warnbg)}
+.num{font-variant-numeric:tabular-nums}
+.qrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.qr{background:#fff;padding:8px;border-radius:10px}
+.qr img,.qr canvas{display:block;width:180px;max-width:100%;height:auto}
+.count{font-size:40px;font-weight:900;color:var(--red);font-variant-numeric:tabular-nums}
+</style>
+
+</head><body>
+<main id="app"></main>
+<div id="modal"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+// ===== 고정 값 =====
+const APP = location.origin + location.pathname;
+const ZONES = {
+  'STAND-A':{name:'1층 스탠딩 A구역',stand:true}, 'STAND-B':{name:'1층 스탠딩 B구역',stand:true},
+  'STAND-C':{name:'1층 스탠딩 C구역',stand:true}, 'STAND-D':{name:'1층 스탠딩 D구역',stand:true},
+  'SEAT-1F':{name:'1층 지정석',floor:'1층',stand:false}, 'SEAT-2F':{name:'2층 지정석',floor:'2층',stand:false}
+};
+const ZONE_IDS = Object.keys(ZONES);
+const SHORT = {'STAND-A':'스탠딩 A','STAND-B':'스탠딩 B','STAND-C':'스탠딩 C','STAND-D':'스탠딩 D','SEAT-1F':'1층 좌석','SEAT-2F':'2층 좌석'};
+const CONDS = ['심장 질환','당뇨','천식','뇌전증','알레르기','기타'];
+const BANDS = ['0001','0002'];
+const SEED = { // 예시 2개: 0001은 발표 때 직접 등록, 0002는 미리 등록된 예시
+  '0001':{registered:false},
+  '0002':{registered:true,name:'김민준',phone:'010-0000-0000',zoneId:'SEAT-2F',seatDetail:'B구역 5열 12번',conditions:['심장 질환'],consent:true}
+};
+const GUIDE = {
+  '당뇨':['대처 안내: 저혈당 의심','의식이 또렷하면 혈당 확인 후 당질 15g, 15분 뒤 다시 확인','* 의식이 나빠지거나 숨쉬기 힘들면 즉시 119'],
+  '심장 질환':['대처 안내: 심장 질환','의식·호흡이 없으면 119 + 가슴압박 + AED'],
+  '천식':['대처 안내: 천식','본인 흡입기 사용 보조'],
+  '뇌전증':['대처 안내: 뇌전증','경련하면 주변 정리, 머리 받치기, 시간 기록'],
+  '알레르기':['대처 안내: 알레르기','본인 자가주사기 사용 보조, 119']
+};
+// 스태프 카드 뒷면 '증상별 대처' (시연화면/스태프카드.html과 같은 문구)
+const CARD = [
+  ['심정지','119·AED 요청 → 가슴압박 → AED, 공연 중단, 관객 중 의사 찾기'],
+  ['탈진·열사병','서늘한 곳, 119, 젖은 타월·바람, 의식 있으면 수분'],
+  ['쇼크','다리 15~30cm 올리고 보온, 입으로 아무것도 X'],
+  ['경련','주변 정리, 머리 받치기, 시간 기록'],
+  ['저혈당','의식 또렷: 혈당 70 이하면 당질 15g → 15분 후 재측정 / 의식 흐림: 입으로 X, 119'],
+  ['천식','본인 흡입기 사용 보조'],
+  ['알레르기 쇼크','본인 자가주사기 사용 보조, 119'],
+  ['출혈','5분 이상 직접 압박'],
+  ['골절','119, 움직이지 않게 고정'],
+  ['압사 위험','공연 중단, 밀도 낮추기']
+];
+const HOSP = '즉시 병원: 의식 저하 · 호흡 곤란 · 경련 · 반복 구토 · 머리 부상 후 의식 흐림';
+const COND_ROW = {'심장 질환':'심정지','당뇨':'저혈당','천식':'천식','뇌전증':'경련','알레르기':'알레르기 쇼크'};
+function cardRows(r,b){ // 이 신고에 맞는 줄을 위로
+  const hit=new Set();
+  if(r.consciousness==='없음') hit.add('심정지');
+  if(r.trauma==='있음'){ hit.add('출혈'); hit.add('골절'); }
+  if(b&&b.registered) b.conditions.forEach(c=>COND_ROW[c]&&hit.add(COND_ROW[c]));
+  return [...CARD.filter(x=>hit.has(x[0])).map(x=>[...x,true]), ...CARD.filter(x=>!hit.has(x[0])).map(x=>[...x,false])];
+}
+const STATUS = {received:'접수',dispatched:'출동 중',verified:'도착·확인',closed:'종료',cancelled:'취소됨'};
+const seedBand = id => Object.assign({registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],consent:false}, SEED[id]||{});
+
+// ===== 유틸 =====
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = ms => { const s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+const clock = t => t ? new Date(t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+const mem = {};
+function dget(k,d){ try{ const v=localStorage.getItem('sl2-'+k); return v==null?d:JSON.parse(v); }catch(e){ return mem[k]==null?d:mem[k]; } }
+function dset(k,v){ mem[k]=v; try{ v==null?localStorage.removeItem('sl2-'+k):localStorage.setItem('sl2-'+k,JSON.stringify(v)); }catch(e){} }
+let toastT;
+function toast(m){ const t=$('toast'); t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+
+// ===== 저장소: 아티팩트 공유 DB (없으면 이 기기 안에서만) =====
+const S = {bands:{},reports:{},ready:false};
+let DB=null, bc=null;
+const LKEY='sl2-local';
+const getBand = id => S.bands[id] || seedBand(id);
+function localLoad(){ let st=null; try{ st=JSON.parse(localStorage.getItem(LKEY)); }catch(e){} return st||mem.local||{bands:{},reports:{}}; }
+function localSave(st){ mem.local=st; try{ localStorage.setItem(LKEY,JSON.stringify(st)); }catch(e){} try{ bc&&bc.postMessage(1); }catch(e){} }
+function localApply(){ const st=localLoad(); S.bands=st.bands; S.reports=st.reports; S.ready=true; onData(); }
+async function init(){
+  let db=null;
+  try{ if(FIREBASE_CONFIG&&window.firebase){ firebase.initializeApp(FIREBASE_CONFIG); db=firebase.firestore(); } }catch(e){ toast('Firebase 설정 오류'); }
+  if(db){
+    DB=db; let gotB=false, gotR=false;
+    const ok=()=>{ if(gotB&&gotR) S.ready=true; onData(); };
+    const bad=()=>toast('연결 오류 — 새로고침해 주세요');
+    DB.collection('bands').onSnapshot(s=>{ const o={}; s.docs.forEach(d=>o[d.id]=d.data()); S.bands=o; gotB=true; ok(); },bad);
+    DB.collection('reports').onSnapshot(s=>{ const o={}; s.docs.forEach(d=>o[d.id]=Object.assign({},d.data(),{id:d.id})); S.reports=o; gotR=true; ok(); },bad);
+  }else{
+    try{ bc=new BroadcastChannel('sl2'); bc.onmessage=localApply; }catch(e){}
+    addEventListener('storage',e=>{ if(e.key===LKEY) localApply(); });
+    localApply();
+  }
+}
+async function write(fn){ for(let i=0;i<3;i++){ try{ return await fn(); }catch(e){ if(i===2){ toast('전송 실패 — 다시 눌러 주세요'); throw e; } await new Promise(r=>setTimeout(r,400)); } } }
+async function saveBand(id,b){
+  const full=Object.assign(getBand(id),b);
+  if(!DB){ const st=localLoad(); st.bands[id]=full; localSave(st); return localApply(); }
+  S.bands[id]=full; onData(); await write(()=>DB.collection('bands').doc(id).set(full));
+}
+async function addReport(r){
+  if(!DB){ const st=localLoad(); st.reports[r.id]=r; localSave(st); return localApply(); }
+  S.reports[r.id]=r; onData(); const c=Object.assign({},r); delete c.id;
+  await write(()=>DB.collection('reports').doc(r.id).set(c));
+}
+async function patch(id,p){
+  if(!DB){ const st=localLoad(); if(st.reports[id]) Object.assign(st.reports[id],p); localSave(st); return localApply(); }
+  if(S.reports[id]) Object.assign(S.reports[id],p); onData(); await write(()=>DB.collection('reports').doc(id).update(p));
+}
+async function resetAll(){
+  if(!DB){ localSave({bands:{},reports:{}}); return localApply(); }
+  for(const id of Object.keys(S.reports)) await write(()=>DB.collection('reports').doc(id).delete());
+  for(const id of BANDS) await write(()=>DB.collection('bands').doc(id).set(seedBand(id)));
+}
+
+// ===== 신고 도우미 =====
+const isOpen = r => r.status!=='closed' && r.status!=='cancelled';
+const openReports = () => Object.values(S.reports).filter(isOpen).sort((a,b)=>b.createdAt-a.createdAt);
+const allReports = () => Object.values(S.reports).sort((a,b)=>(isOpen(b)-isOpen(a))||(b.createdAt-a.createdAt));
+function seatLabel(b){ if(!b.zoneId) return ''; const z=ZONES[b.zoneId]; return z.stand?z.name:(b.seatDetail?z.floor+' '+b.seatDetail:z.name); }
+function badge(r){
+  if(r.status==='cancelled') return '<span class="badge b-gray">취소됨</span>';
+  if(r.status==='closed') return '<span class="badge b-ok">종료</span>';
+  return r.consciousness==='없음' ? '<span class="badge b-urgent">긴급</span>' : '<span class="badge b-check">확인 필요</span>';
+}
+
+// ===== 화면 상태 =====
+let V = {s:'HOME',p:{}};
+const DARK = new Set(['S1','S2','S3','M1']);
+const LIVE = new Set(['A3','A4','A5','S1','S2','S3','M1']);
+function go(s,p){ V={s,p:p||{}}; autoSms(); render(); scrollTo(0,0); }
+// 의식 없음 신고: 그 신고의 출동 화면에 있으면 119 문자 창을 한 번 자동으로 연다
+function autoSms(){
+  if(V.s!=='S2') return false;
+  const r=S.reports[V.p.id], opened=dget('smsOpened',[]);
+  if(!r||!isOpen(r)||r.consciousness!=='없음'||opened.includes(r.id)) return false;
+  opened.push(r.id); dset('smsOpened',opened); V.p.sms=true; return true;
+}
+const brand = (t,r) => `<div class="brand"><span><i>★</i> STARLIGHT LIVE ${esc(t)}</span>${r||''}</div>`;
+const foot = '<p class="foot">시연용 화면입니다. 실제 신고·전화·문자는 되지 않습니다.</p>';
+
+const SCREENS = {
+HOME(){
+  const cards=[['band-0001','팔찌 #0001','관객 폰 · 처음엔 등록, 다시 찍으면 신고'],['band-0002','팔찌 #0002','예시 등록 팔찌 · 스태프 폰으로 찍으면 환자 확인'],
+    ['qr-STAND-C','스탠딩 C구역 펜스','관객 폰 · 구역 자동 신고'],['staff','STAFF 전용','스태프 폰으로 찍기']];
+  return `<div class="wrap wide">${brand('응급 팔찌 시연')}
+  <h1>폰 카메라로 QR을 찍으세요</h1>
+  <p class="sub">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 로그인은 필요 없어요.</p>
+  <div class="qrs">${cards.map(([h,t,s])=>`<div class="card line" style="align-items:center;text-align:center"><div class="qr" data-qr="${APP}#${h}"></div><b>${t}</b><span class="small">${s}</span></div>`).join('')}</div>
+  <button class="btn red" data-act="toMonitor" style="max-width:420px;align-self:center">이 노트북을 응급처치실 모니터로 쓰기</button>${foot}</div>`;
+},
+
+// ---------- 관객 ----------
+A1(p){ return `<div class="wrap">${brand('응급 팔찌 등록')}
+  <h1>내 팔찌 등록하기</h1>
+  <p class="sub">정보를 넣어 두면 응급 시 더 빨리 도울 수 있어요</p>
+  <div class="card"><b>STARLIGHT LIVE BAND #${esc(p.band)}</b><p class="small">입력한 정보는 응급 시 스태프·의료팀만 볼 수 있어요.</p></div>
+  <button class="btn red" data-act="startReg">등록 시작</button>
+  <button class="btn out" data-act="toReport">응급 신고하기<small>입력하지 않아도 신고는 똑같이 돼요</small></button>${foot}</div>`; },
+
+A2(p){
+  if(p.done){ const b=getBand(p.band); return `<div class="wrap">${brand('응급 팔찌 등록')}
+    <h1>등록됐어요!</h1><p class="sub">응급 시 스태프·의료팀만 볼 수 있어요</p>
+    <div class="card"><dl class="kv"><dt>팔찌</dt><dd>STARLIGHT LIVE BAND #${esc(p.band)}</dd><dt>좌석</dt><dd>${esc(seatLabel(b)||'미입력')}</dd></dl></div>
+    <p class="sub">응급 상황이 생기면 팔찌 QR을 다시 찍으세요</p>${foot}</div>`; }
+  const F=p.f, seat=F.zoneId&&!ZONES[F.zoneId].stand;
+  return `<div class="wrap">${brand('응급 팔찌 등록')}
+  <h1>응급 정보 입력</h1><p class="sub">모두 선택 사항이에요. 넣어 둔 만큼 더 빨리 도울 수 있어요.</p>
+  <label class="f">이름 (선택)<input type="text" id="f-name" data-f="name" maxlength="10" value="${esc(F.name)}"></label>
+  <label class="f">연락처 (선택)<input type="text" id="f-phone" data-f="phone" inputmode="tel" maxlength="13" value="${esc(F.phone)}"></label>
+  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">좌석 (스탠딩은 구역 선택)</b>
+    <div class="grid3">${ZONE_IDS.map(z=>`<button class="chip" aria-pressed="${F.zoneId===z}" data-act="fzone" data-arg="${z}">${SHORT[z]}</button>`).join('')}</div>
+    ${seat?`<input type="text" id="f-seat" data-f="seatDetail" placeholder="예: B구역 5열 12번" value="${esc(F.seatDetail)}">`:''}</div>
+  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">기왕력 (선택)</b>
+    <div class="grid3">${CONDS.map(c=>`<button class="chip" aria-pressed="${F.conditions.includes(c)}" data-act="fcond" data-arg="${c}">${c}</button>`).join('')}</div></div>
+  <div class="card line"><b style="font-size:14px">[필수 아님] 민감정보(기왕력) 수집·이용 동의</b>
+    <p class="small">목적: 응급 대응 · 보관: 공연 종료 후 24시간 안 파기 · 동의하지 않아도 신고 가능</p>
+    <label class="consent"><input type="checkbox" id="f-consent" data-f="consent" ${F.consent?'checked':''}> 동의합니다</label></div>
+  <button class="btn red" data-act="save">저장</button>${foot}</div>`;
+},
+
+A3(p){
+  const b=p.band?getBand(p.band):null;
+  let zoneId=null, label='', tag='';
+  if(p.place){ zoneId=p.place; label=ZONES[zoneId].name; tag='펜스 QR 구역 자동 입력'; }
+  else if(b&&b.registered&&b.zoneId){ zoneId=b.zoneId; label=seatLabel(b); tag='등록된 좌석 자동 입력'; }
+  else { zoneId=p.zone||null; tag='층·구역을 골라 주세요'; }
+  const pick=!p.place&&!(b&&b.registered&&b.zoneId);
+  const stand=zoneId&&ZONES[zoneId].stand;
+  return `<div class="wrap">${brand('응급 신고')}
+  <div class="warn">의식·호흡이 없으면 119 먼저</div>
+  <div class="card"><div class="row" style="justify-content:space-between"><b>현재 위치</b><span class="tag">${tag}</span></div>
+    ${pick?`<div class="grid3">${ZONE_IDS.map(z=>`<button class="chip" aria-pressed="${zoneId===z}" data-act="pzone" data-arg="${z}">${SHORT[z]}</button>`).join('')}</div>`:`<div class="big">${esc(label)}</div>`}
+    ${stand?`<div class="row">${['앞','중간','뒤'].map(x=>`<button class="chip" aria-pressed="${p.pos===x}" data-act="ppos" data-arg="${x}">${x}</button>`).join('')}</div>`:''}</div>
+  <p class="small" style="text-align:center">버튼을 누르면 응급처치실과 구역 스태프에게 바로 전송됩니다</p>
+  <button class="btn red sos" data-act="send" ${zoneId&&!p.sending?'':'disabled'}>${p.sending?'전송 중…':'신고'}</button>${foot}</div>`;
+},
+
+A4(p){
+  const r=S.reports[p.id]; if(!r) return `<div class="wrap"><p>불러오는 중…</p></div>`;
+  const chips=(f,vals)=>vals.map(v=>`<button class="chip" aria-pressed="${r[f]===v}" data-act="pick" data-arg="${f}|${v}">${v}</button>`).join('');
+  const prog={received:'스태프에게 알림이 갔어요',dispatched:'스태프가 출동했어요',verified:'스태프가 도착했어요',closed:'인계가 끝났어요',cancelled:'신고를 취소했어요'}[r.status];
+  return `<div class="wrap">${brand('응급 신고')}
+  ${r.consciousness==='없음'&&isOpen(r)?`<div class="card" style="background:var(--red);color:var(--on-red)"><div class="big">지금 119에 전화하고<br>가슴압박을 하세요</div>
+    <p>스태프가 AED를 가지고 가고 있어요</p><p class="small" style="color:inherit">주변 관객에게 "도와주세요! 119 통화 중입니다"라고 알리세요.</p></div>`:''}
+  <h1>${r.status==='cancelled'?'신고를 취소했어요':'신고가 접수됐어요.<br>스태프가 가고 있어요'}</h1>
+  <div class="card"><dl class="kv"><dt>위치</dt><dd>${esc(r.locationLabel)}</dd><dt>진행</dt><dd>${prog}</dd></dl></div>
+  ${r.status==='received'?`<button class="btn out" data-act="cancel" data-until="${r.createdAt+10000}">실수로 눌렀어요 (10초 안에 취소)</button>`:''}
+  ${r.status!=='cancelled'?`<div class="card line"><b>추가 상태 전달 (선택)</b>
+    <p class="small">의식</p><div class="row">${chips('consciousness',['있음','없음','모르겠음'])}</div>
+    <p class="small">외상</p><div class="row">${chips('trauma',['있음','없음'])}</div>
+    <p class="small">고르지 않아도 출동합니다</p></div>`:''}${foot}</div>`;
+},
+
+A5(p){
+  const r=S.reports[p.id]; if(!r) return `<div class="wrap"><p>불러오는 중…</p></div>`;
+  const prog={received:'스태프에게 알림이 갔어요',dispatched:'스태프가 AED를 가지고 오고 있어요',verified:'스태프가 도착했어요',closed:'인계가 끝났어요',cancelled:'신고를 취소했어요'}[r.status];
+  return `<div class="wrap">${brand('응급 신고')}
+  <div class="card" style="background:var(--red);color:var(--on-red);padding:24px 18px">
+    <div class="big" style="font-size:30px">지금 119에 전화하고<br>가슴압박을 하세요</div>
+    <p>환자가 반응하지 않으며 호흡이 없거나 비정상적입니다</p></div>
+  <div class="card"><b>1. 119에 전화하기</b><p class="small">시연에서는 전화가 걸리지 않아요.</p>
+    <b>2. 가슴 한가운데를 세게, 빠르게 누르기</b>
+    <b>3. 주변에 알리기</b><p class="small">"도와주세요! 119 통화 중입니다"</p></div>
+  <div class="card line"><dl class="kv"><dt>위치</dt><dd>${esc(r.locationLabel)}</dd><dt>진행</dt><dd>${prog}</dd></dl></div>
+  <button class="btn out" data-act="backA4">신고 화면으로 돌아가기</button>${foot}</div>`;
+},
+
+// ---------- 스태프 ----------
+S1(){
+  const list=openReports();
+  const card=r=>`<div class="card" style="border:2px solid ${r.consciousness==='없음'?'var(--red)':'var(--line)'}">
+    <div class="row" style="justify-content:space-between;align-items:center">${badge(r)}<span class="small num">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과</span></div>
+    <div class="big">응급 신고 · ${esc(r.locationLabel)}</div>
+    <p class="small">${r.source==='place'?'펜스 QR 신고':'팔찌 QR 신고'} · 의식 ${esc(r.consciousness||'모름')} · 외상 ${esc(r.trauma||'모름')} · ${STATUS[r.status]}</p>
+    <button class="btn red" data-act="dispatch" data-arg="${r.id}">${r.status==='received'?'출동':'출동 화면 열기'}</button></div>`;
+  return `<div class="wrap">${brand('STAFF 알림')}
+  ${list.length?list.map(card).join(''):`<div class="card"><div class="big">신고 대기 중</div><p class="small">신고가 들어오면 화면이 깜박이고 진동이 울려요. 화면을 켠 채로 두세요.</p></div>`}${foot}</div>`;
+},
+
+S2(p){
+  const r=S.reports[p.id]; if(!r||!isOpen(r)){ dset('active',null); return SCREENS.S1(); }
+  const b=r.bandId?getBand(r.bandId):null, reg=b&&b.registered;
+  const urgent=r.consciousness==='없음';
+  const guide=reg&&r.consciousness==='있음'?b.conditions.filter(c=>GUIDE[c]):[];
+  return `<div class="wrap">${brand('STAFF 출동')}
+  <div class="row" style="align-items:center">${badge(r)}<b style="font-size:17px">${urgent?'AED 들고 출동 → 도착 즉시 AED 준비':'AED 들고 출동'}</b></div>
+  ${r.trauma==='있음'?'<div class="warn">구급상자 챙기기</div>':''}
+  <div class="card"><span class="small num">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과</span>
+    <div class="big">${esc(r.locationLabel)}</div>
+    <p>의식: <b>${esc(r.consciousness||'모름')}</b> · 외상: <b>${esc(r.trauma||'모름')}</b></p></div>
+  <div class="card line">${reg?`<b>등록 정보: 기왕력 ${esc(b.conditions.join(', ')||'없음')}</b>
+      <p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')} <span class="small">(사전 등록 정보 · 스태프·의료팀만 보임)</span></p>`
+    :'<b>등록 정보 없음</b>'}
+    ${r.verifyResult?`<span class="badge b-ok">팔찌 확인 완료 · #${esc(r.bandId)}${r.verifyResult==='변경'?' (팔찌가 달라 정보 변경)':''}</span>`:''}</div>
+  ${guide.map(c=>`<div class="card"><b>${GUIDE[c][0]}</b><ul class="g">${GUIDE[c].slice(1).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
+  <div class="card ${r.verifyResult?'':'line'}" style="${r.verifyResult?'':'border-color:var(--red)'}">
+    <b>${r.verifyResult?'도착·확인됨 '+clock(r.verifiedAt):'도착 후 환자 팔찌 찍어 확인'}</b>
+    ${r.verifyResult?'':'<p class="small">이 폰 카메라로 환자 팔찌의 QR을 찍으세요.</p>'}</div>
+  <button class="btn out" data-act="card" aria-expanded="${!!p.card}">${p.card?'증상별 대처 카드 접기':'증상별 대처 카드 보기'}</button>
+  ${p.card?`<div class="card line" style="gap:0;padding:0;overflow:hidden">
+    ${cardRows(r,b).map(([s,t,on])=>`<div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);${on?'background:var(--warnbg)':''}">
+      <b style="${on?'color:var(--red)':''}">${s}${on?'<br><span class="tag">이 신고</span>':''}</b><span style="${on?'font-weight:700':''}">${esc(t)}</span></div>`).join('')}
+    <div style="background:var(--red);color:var(--on-red);padding:10px 12px;font-weight:800;font-size:14px">${HOSP}</div></div>`:''}
+  <button class="btn ${urgent?'red':'out'}" data-act="sms">119 문자${r.sms119At?'<small>보냄(시연) '+clock(r.sms119At)+'</small>':''}</button>
+  <button class="btn green" data-act="close">인계 완료</button>
+  <div class="row" style="align-items:center"><span class="small">QR이 안 열리면 팔찌 번호 입력</span>
+    <input type="text" id="bandno" inputmode="numeric" maxlength="4" style="flex:1 1 90px;width:auto;min-height:40px" placeholder="0001">
+    <button class="chip" data-act="manualVerify">확인</button></div>${foot}</div>`;
+},
+
+S3(p){
+  if(p.none) return `<div class="wrap">${brand('STAFF 팔찌 확인')}<h1>진행 중인 신고가 없습니다</h1><button class="btn out" data-act="toS1">알림 화면으로</button>${foot}</div>`;
+  const r=S.reports[p.id]; if(!r) return SCREENS.S1();
+  const b=getBand(r.bandId);
+  const msg=p.result==='일치'?'신고된 사람이 맞습니다':(p.wasPlace?'이 팔찌의 등록 정보를 연결했습니다':'신고된 팔찌와 다릅니다.<br>이 팔찌의 등록 정보로 바꿨습니다');
+  return `<div class="wrap">${brand('STAFF 팔찌 확인')}
+  <div class="card" style="border:2px solid var(--green)"><span class="badge b-ok">팔찌 #${esc(r.bandId)}</span><div class="big">${msg}</div></div>
+  <div class="card line">${b.registered?`<b>등록 정보: 기왕력 ${esc(b.conditions.join(', ')||'없음')}</b><p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')}</p>`:'<b>등록 정보 없음 (미등록 팔찌)</b>'}</div>
+  <button class="btn red" data-act="toS2" data-arg="${r.id}">출동 화면으로</button>${foot}</div>`;
+},
+
+// ---------- 모니터 ----------
+M1(){
+  const all=allReports(), n=all.filter(isOpen).length, now=Date.now();
+  const row=r=>{ const b=r.bandId?getBand(r.bandId):null; const end=r.verifiedAt||r.closedAt||r.cancelledAt;
+    return `<tr class="${isOpen(r)?(now-r.createdAt<6000?'new':''):'done'}">
+      <td class="num">${clock(r.createdAt)}</td><td><b>${esc(r.locationLabel)}</b></td>
+      <td>의식 ${esc(r.consciousness||'모름')}<br>외상 ${esc(r.trauma||'모름')}</td>
+      <td>${b&&b.registered?esc(b.name||'—')+'<br><span class="small">'+esc(b.conditions.join(', ')||'기왕력 없음')+'</span>':'<span class="small">등록 정보 없음</span>'}</td>
+      <td>${badge(r)} <b>${STATUS[r.status]}</b>${r.sms119At?'<br><span class="tag">119 문자(시연)</span>':''}</td>
+      <td class="num" data-since="${r.createdAt}" data-stop="${end||''}">${fmt((end||now)-r.createdAt)}</td></tr>`; };
+  return `<div class="wrap wide">${brand('응급처치실 모니터','<span class="small">스태프·의료팀 화면</span>')}
+  <div class="row" style="align-items:baseline;gap:12px"><h1>진행 중</h1><span class="count">${n}건</span></div>
+  ${all.length?`<div class="tbl"><table><thead><tr><th>접수</th><th>위치</th><th>의식·외상</th><th>등록 정보</th><th>상태</th><th>경과</th></tr></thead><tbody>${all.map(row).join('')}</tbody></table></div>`
+    :'<div class="card"><div class="big">신고 없음</div><p class="small">관객이 팔찌 QR로 신고하면 여기에 바로 뜹니다.</p></div>'}${foot}</div>`;
+},
+
+RESET(p){ return `<div class="wrap">${brand('발표자')}<h1>시연 데이터를 처음 상태로 되돌립니다</h1>
+  <p class="sub">신고를 모두 지우고, 팔찌 0001은 미등록, 0002는 예시 등록 상태로 돌립니다. 이 기기의 스태프 기억도 지웁니다.</p>
+  <button class="btn red" data-act="reset">${p.confirm?'한 번 더 누르면 초기화돼요':'초기화'}</button>${foot}</div>`; }
+};
+
+// ===== 그리기 =====
+function render(){
+  document.body.classList.toggle('dark',DARK.has(V.s));
+  $('app').innerHTML=SCREENS[V.s](V.p);
+  $('modal').innerHTML=V.p.sms?smsModal(S.reports[V.p.id]):'';
+  document.querySelectorAll('[data-qr]').forEach(el=>{ try{ new QRCode(el,{text:el.dataset.qr,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.textContent=el.dataset.qr; el.className='small'; } });
+  tick();
+}
+function smsModal(r){
+  if(!r) return '';
+  const b=r.bandId?getBand(r.bandId):null, reg=b&&b.registered;
+  const body=`[응급] STARLIGHT 공연장 ${r.locationLabel}\n주소: OO시 OO로 00 / 가까운 건물: OO역\n의식 ${r.consciousness||'모름'} · 외상 ${r.trauma||'모름'}\n기왕력: ${reg?(b.conditions.join(', ')||'없음'):'등록 없음'}\n연락처: ${reg&&b.phone?b.phone:'등록 없음'}`;
+  return `<div class="modal"><div class="in"><div class="box">
+    <div class="row" style="justify-content:space-between"><b style="font-size:19px">119 문자 신고</b><span class="small">확인 후 보내기</span></div>
+    <div class="warn" style="font-size:15px">통화가 가능하면 119 전화가 우선입니다</div>
+    <pre class="msg">${esc(body)}</pre>
+    ${r.sms119At?'<div class="btn green">시연용: 실제로 보내지 않았습니다</div>':'<button class="btn red" data-act="sendSms">보내기</button>'}
+    <button class="btn out" data-act="closeSms">닫기</button></div></div></div>`;
+}
+function tick(){
+  const now=Date.now();
+  document.querySelectorAll('[data-since]').forEach(el=>{ const stop=+el.dataset.stop||0; el.textContent=fmt((stop||now)-(+el.dataset.since)); });
+  document.querySelectorAll('[data-until]').forEach(el=>{ const left=+el.dataset.until-now; if(left<=0) el.remove(); else el.firstChild.textContent=`실수로 눌렀어요 (${Math.ceil(left/1000)}초 안에 취소)`; });
+}
+let sec=0; setInterval(()=>{ tick(); if(V.s==='M1'&&++sec%3===0) render(); },1000);
+
+// ===== 스태프 알림·자동 동작 =====
+let audio=null, known=null, pendingBand=null;
+document.addEventListener('click',()=>{ try{ if(!audio){ const C=window.AudioContext||window.webkitAudioContext; if(C) audio=new C(); } audio&&audio.resume&&audio.resume(); }catch(e){} },{capture:true});
+function ring(){
+  try{ if(audio){ const t=audio.currentTime; [0,.25].forEach(d=>{ const o=audio.createOscillator(),g=audio.createGain(); o.frequency.value=880; o.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(.001,t+d); g.gain.exponentialRampToValueAtTime(.4,t+d+.02); g.gain.exponentialRampToValueAtTime(.001,t+d+.18); o.start(t+d); o.stop(t+d+.2); }); } }catch(e){}
+  try{ navigator.vibrate&&navigator.vibrate([300,120,300]); }catch(e){}
+  document.body.classList.remove('flash'); void document.body.offsetWidth; document.body.classList.add('flash');
+}
+const isStaff = () => dget('role',null)==='staff';
+function onData(){
+  if(!S.ready) return;
+  if(pendingBand){ const id=pendingBand; pendingBand=null; return staffVerify(id); }
+  if(isStaff()){
+    const ids=Object.keys(S.reports);
+    if(known===null) known=new Set(ids);
+    else{ const fresh=ids.filter(id=>!known.has(id)); fresh.forEach(id=>known.add(id)); if(fresh.some(id=>isOpen(S.reports[id]))) ring(); }
+    // 의식 없음 신고: 그 신고의 출동 화면에 있으면 119 문자 창을 한 번 자동으로 연다
+    if(autoSms()) ring();
+    if(V.s==='S1'){ const opened=dget('urgentSeen',[]); const u=openReports().find(r=>r.consciousness==='없음'&&!opened.includes(r.id)); if(u){ opened.push(u.id); dset('urgentSeen',opened); ring(); } }
+  }
+  if(LIVE.has(V.s)) render();
+}
+async function staffVerify(bandId){
+  let r=S.reports[dget('active',null)];
+  if(!r||!isOpen(r)) r=openReports()[0];
+  // 확인할 신고가 없으면 확인이 아니라 관객으로 찍은 것: 관객 화면을 연다
+  if(!r) return getBand(bandId).registered ? openReportFor({band:bandId}) : go('A1',{band:bandId});
+  const wasPlace=!r.bandId, result=r.bandId===bandId?'일치':'변경';
+  const p={status:'verified',verifiedAt:r.verifiedAt||Date.now(),verifyResult:result,acceptedAt:r.acceptedAt||Date.now()};
+  if(result==='변경'){ p.originalBandId=r.bandId||null; p.bandId=bandId; }
+  dset('active',r.id);
+  await patch(r.id,p);
+  go('S3',{id:r.id,result,wasPlace});
+}
+
+// ===== 버튼 =====
+const ACT = {
+  startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),consent:!!b.consent}}); },
+  toReport(){ openReportFor({band:V.p.band}); },
+  fzone(z){ V.p.f.zoneId=z; render(); },
+  fcond(c){ const a=V.p.f.conditions, i=a.indexOf(c); i<0?a.push(c):a.splice(i,1); render(); },
+  async save(){ const F=V.p.f;
+    if(F.conditions.length&&!F.consent) return toast('기왕력을 저장하려면 동의가 필요해요');
+    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],consent:F.consent,registeredAt:Date.now()});
+    go('A2',{band:V.p.band,done:true}); },
+  pzone(z){ V.p.zone=z; V.p.pos=null; render(); },
+  ppos(x){ V.p.pos=V.p.pos===x?null:x; render(); },
+  async send(){ const p=V.p; if(p.sending) return;
+    const b=p.band?getBand(p.band):null;
+    const zoneId=p.place||(b&&b.registered&&b.zoneId)||p.zone; if(!zoneId) return;
+    const base=p.place?ZONES[zoneId].name:(b&&b.registered&&b.zoneId?seatLabel(b):ZONES[zoneId].name);
+    const r={id:'r'+Date.now()+Math.random().toString(36).slice(2,6),createdAt:Date.now(),source:p.place?'place':'band',bandId:p.place?null:p.band,
+      originalBandId:null,placeId:p.place||null,zoneId,locationLabel:base+(p.pos?' ('+p.pos+')':''),consciousness:null,trauma:null,status:'received',
+      acceptedAt:null,verifiedAt:null,closedAt:null,cancelledAt:null,verifyResult:null,sms119At:null,outcome:null};
+    p.sending=true; render();
+    try{ await addReport(r); go('A4',{id:r.id}); }catch(e){ p.sending=false; render(); } },
+  async cancel(){ const r=S.reports[V.p.id]; if(!r||r.status!=='received'||Date.now()-r.createdAt>10000) return; await patch(r.id,{status:'cancelled',cancelledAt:Date.now()}); },
+  async pick(a){ const [f,v]=a.split('|'); const r=S.reports[V.p.id]; if(!r) return; const nv=r[f]===v?null:v;
+    await patch(r.id,{[f]:nv}); if(f==='consciousness'&&nv==='없음') go('A5',{id:r.id}); },
+  backA4(){ go('A4',{id:V.p.id}); },
+  async dispatch(id){ const r=S.reports[id]; dset('active',id); if(r.status==='received') await patch(id,{status:'dispatched',acceptedAt:Date.now()}); go('S2',{id}); },
+  card(){ V.p.card=!V.p.card; render(); },
+  sms(){ V.p.sms=true; render(); },
+  closeSms(){ V.p.sms=false; render(); },
+  async sendSms(){ await patch(V.p.id,{sms119At:Date.now()}); toast('시연용: 실제로 보내지 않았습니다'); },
+  async close(){ const r=S.reports[V.p.id]; await patch(r.id,{status:'closed',closedAt:Date.now(),outcome:r.sms119At?'119 인계':'응급처치실 인계'}); dset('active',null); go('S1'); },
+  manualVerify(){ const v=($('bandno').value||'').trim().padStart(4,'0'); if(!BANDS.includes(v)) return toast('팔찌 번호를 찾지 못했어요'); staffVerify(v); },
+  toMonitor(){ location.hash='monitor'; route(); },
+  toS1(){ go('S1'); },
+  toS2(id){ go('S2',{id}); },
+  async reset(){ if(!V.p.confirm){ V.p.confirm=true; return render(); }
+    toast('초기화 중…'); await resetAll(); ['role','active','smsOpened','urgentSeen'].forEach(k=>dset(k,null)); known=null; V.p.confirm=false; render(); toast('처음 상태로 되돌렸어요'); }
+};
+document.addEventListener('click',e=>{ const el=e.target.closest('[data-act]'); if(!el||el.disabled) return; const f=ACT[el.dataset.act]; if(f) f(el.dataset.arg,el); });
+document.addEventListener('input',e=>{ const k=e.target.dataset&&e.target.dataset.f; if(!k||!V.p.f) return; V.p.f[k]=e.target.type==='checkbox'?e.target.checked:e.target.value; });
+
+// ===== 진입 (QR 해시) =====
+function openReportFor(p){
+  const dup=openReports().find(r=>p.place?r.placeId===p.place:r.bandId===p.band);
+  if(dup) return go('A4',{id:dup.id});
+  go('A3',p);
+}
+function route(){
+  const h=decodeURIComponent((location.hash||'').slice(1));
+  if(h==='staff'){ dset('role','staff'); known=null; return go('S1'); }
+  if(h==='monitor'){ dset('role','monitor'); return go('M1'); }
+  if(h==='reset') return go('RESET');
+  if(h.startsWith('band-')&&BANDS.includes(h.slice(5))){
+    const id=h.slice(5);
+    if(isStaff()){ if(S.ready) return staffVerify(id); pendingBand=id; return go('S1'); }
+    if(!S.ready){ V={s:'WAIT',p:{band:id}}; $('app').innerHTML='<div class="wrap"><p>불러오는 중…</p></div>'; return; }
+    return getBand(id).registered ? openReportFor({band:id}) : go('A1',{band:id});
+  }
+  if(h.startsWith('qr-')&&ZONES[h.slice(3)]) return S.ready?openReportFor({place:h.slice(3)}):(V={s:'WAIT',p:{place:h.slice(3)}});
+  // 로그인하느라 주소 뒤가 지워졌을 때: 이 기기의 역할로
+  if(isStaff()) return go('S1');
+  if(dget('role',null)==='monitor') return go('M1');
+  go('HOME');
+}
+// 데이터가 준비되기 전에 팔찌·펜스 QR로 들어온 경우
+const _onData=onData;
+onData=function(){ if(V.s==='WAIT'&&S.ready){ const p=V.p; if(p.place) return openReportFor({place:p.place}); return getBand(p.band).registered?openReportFor({band:p.band}):go('A1',{band:p.band}); } return _onData(); };
+addEventListener('hashchange',route);
+route();
+init();
+</script>
+</body></html>
