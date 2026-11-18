@@ -259,13 +259,13 @@ A2(p){
   <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">좌석 (스탠딩은 구역 선택)</b>
     <div class="grid3">${ZONE_IDS.map(z=>`<button class="chip" aria-pressed="${F.zoneId===z}" data-act="fzone" data-arg="${z}">${SHORT[z]}</button>`).join('')}</div>
     ${seat?`<input type="text" id="f-seat" data-f="seatDetail" placeholder="예: B구역 5열 12번" value="${esc(F.seatDetail)}">`:''}</div>
-  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">기왕력 (선택)</b>
+  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">지병 (선택)</b><p class="small">앓고 있는 병이 있으면 골라 주세요.</p>
     <div class="grid3">${CONDS.map(c=>`<button class="chip" aria-pressed="${F.conditions.includes(c)}" data-act="fcond" data-arg="${c}">${c}</button>`).join('')}</div></div>
   <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">지금 가지고 있는 약 (선택)</b>
     <p class="small">응급 시 스태프가 본인 약을 쓰도록 도와요. 스태프가 약을 대신 주지는 않아요.</p>
     <div class="row">${MEDS.map(m=>`<button class="chip" aria-pressed="${F.meds.includes(m)}" data-act="fmed" data-arg="${m}">${m}</button>`).join('')}</div>
     ${F.meds.length?`<input type="text" id="f-medswhere" data-f="medsWhere" maxlength="30" placeholder="어디에 있나요? 예: 가방 앞주머니" value="${esc(F.medsWhere)}">`:''}</div>
-  <div class="card line"><b style="font-size:14px">[필수 아님] 민감정보(기왕력·소지 약) 수집·이용 동의</b>
+  <div class="card line"><b style="font-size:14px">[필수 아님] 민감정보(지병·가지고 있는 약) 수집·이용 동의</b>
     <p class="small">목적: 응급 대응 · 보관: 공연 종료 후 24시간 안 파기 · 동의하지 않아도 신고 가능</p>
     <label class="consent"><input type="checkbox" id="f-consent" data-f="consent" ${F.consent?'checked':''}> 동의합니다</label></div>
   <button class="btn red" data-act="save">저장</button>${foot}</div>`;
@@ -341,7 +341,7 @@ S2(p){
   <div class="card"><span class="small num">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과</span>
     <div class="big">${esc(r.locationLabel)}</div>
     <p>의식: <b>${esc(r.consciousness||'모름')}</b> · 외상: <b>${esc(r.trauma||'모름')}</b></p></div>
-  <div class="card line">${reg?`<b>등록 정보: 기왕력 ${esc(b.conditions.join(', ')||'없음')}</b>
+  <div class="card line">${reg?`<b>등록 정보: 지병 ${esc(b.conditions.join(', ')||'없음')}</b>
       ${medsText(b)?`<p style="color:var(--red);font-weight:800">가지고 있는 약: ${esc(medsText(b))} → 본인이 쓰도록 돕기</p>`:''}
       <p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')} <span class="small">(사전 등록 정보 · 스태프·의료팀만 보임)</span></p>`
     :'<b>등록 정보 없음</b>'}
@@ -369,7 +369,7 @@ S3(p){
   const msg=p.result==='일치'?'신고된 사람이 맞습니다':(p.wasPlace?'이 팔찌의 등록 정보를 연결했습니다':'신고된 팔찌와 다릅니다.<br>이 팔찌의 등록 정보로 바꿨습니다');
   return `<div class="wrap">${brand('STAFF 팔찌 확인')}
   <div class="card" style="border:2px solid var(--green)"><span class="badge b-ok">팔찌 #${esc(r.bandId)}</span><div class="big">${msg}</div></div>
-  <div class="card line">${b.registered?`<b>등록 정보: 기왕력 ${esc(b.conditions.join(', ')||'없음')}</b>${medsText(b)?`<p style="color:var(--red);font-weight:800">가지고 있는 약: ${esc(medsText(b))}</p>`:''}<p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')}</p>`:'<b>등록 정보 없음 (미등록 팔찌)</b>'}</div>
+  <div class="card line">${b.registered?`<b>등록 정보: 지병 ${esc(b.conditions.join(', ')||'없음')}</b>${medsText(b)?`<p style="color:var(--red);font-weight:800">가지고 있는 약: ${esc(medsText(b))}</p>`:''}<p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')}</p>`:'<b>등록 정보 없음 (미등록 팔찌)</b>'}</div>
   <button class="btn red" data-act="toS2" data-arg="${r.id}">출동 화면으로</button>${foot}</div>`;
 },
 
@@ -380,7 +380,7 @@ M1(){
     return `<tr class="${isOpen(r)?(now-r.createdAt<6000?'new':''):'done'}">
       <td class="num">${clock(r.createdAt)}</td><td><b>${esc(r.locationLabel)}</b></td>
       <td>의식 ${esc(r.consciousness||'모름')}<br>외상 ${esc(r.trauma||'모름')}</td>
-      <td>${b&&b.registered?esc(b.name||'—')+'<br><span class="small">'+esc(b.conditions.join(', ')||'기왕력 없음')+(medsText(b)?' · 약: '+esc(medsText(b)):'')+'</span>':'<span class="small">등록 정보 없음</span>'}</td>
+      <td>${b&&b.registered?esc(b.name||'—')+'<br><span class="small">'+esc(b.conditions.join(', ')||'지병 없음')+(medsText(b)?' · 약: '+esc(medsText(b)):'')+'</span>':'<span class="small">등록 정보 없음</span>'}</td>
       <td>${badge(r)} <b>${STATUS[r.status]}</b>${r.sms119At?'<br><span class="tag">119 문자(시연)</span>':''}</td>
       <td class="num" data-since="${r.createdAt}" data-stop="${end||''}">${fmt((end||now)-r.createdAt)}</td></tr>`; };
   return `<div class="wrap wide">${brand('응급처치실 모니터','<span class="small">스태프·의료팀 화면</span>')}
@@ -405,7 +405,7 @@ function render(){
 function smsModal(r){
   if(!r) return '';
   const b=r.bandId?getBand(r.bandId):null, reg=b&&b.registered;
-  const body=`[응급] STARLIGHT 공연장 ${r.locationLabel}\n주소: OO시 OO로 00 / 가까운 건물: OO역\n의식 ${r.consciousness||'모름'} · 외상 ${r.trauma||'모름'}\n기왕력: ${reg?(b.conditions.join(', ')||'없음'):'등록 없음'}\n${reg&&medsText(b)?'소지 약: '+medsText(b)+'\n':''}연락처: ${reg&&b.phone?b.phone:'등록 없음'}`;
+  const body=`[응급] STARLIGHT 공연장 ${r.locationLabel}\n주소: OO시 OO로 00 / 가까운 건물: OO역\n의식 ${r.consciousness||'모름'} · 외상 ${r.trauma||'모름'}\n지병: ${reg?(b.conditions.join(', ')||'없음'):'등록 없음'}\n${reg&&medsText(b)?'소지 약: '+medsText(b)+'\n':''}연락처: ${reg&&b.phone?b.phone:'등록 없음'}`;
   return `<div class="modal"><div class="in"><div class="box">
     <div class="row" style="justify-content:space-between"><b style="font-size:19px">119 문자 신고</b><span class="small">확인 후 보내기</span></div>
     <div class="warn" style="font-size:15px">통화가 가능하면 119 전화가 우선입니다</div>
@@ -464,7 +464,7 @@ const ACT = {
   fzone(z){ V.p.f.zoneId=z; render(); },
   fcond(c){ const a=V.p.f.conditions, i=a.indexOf(c); i<0?a.push(c):a.splice(i,1); render(); },
   async save(){ const F=V.p.f;
-    if((F.conditions.length||F.meds.length)&&!F.consent) return toast('기왕력·소지 약을 저장하려면 동의가 필요해요');
+    if((F.conditions.length||F.meds.length)&&!F.consent) return toast('지병·가지고 있는 약을 저장하려면 동의가 필요해요');
     await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],meds:F.consent?F.meds:[],medsWhere:F.consent&&F.meds.length?F.medsWhere.trim():'',consent:F.consent,registeredAt:Date.now()});
     go('A2',{band:V.p.band,done:true}); },
   pzone(z){ V.p.zone=z; V.p.pos=null; render(); },
