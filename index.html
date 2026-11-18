@@ -228,7 +228,8 @@ HOME(){
       <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 로그인은 필요 없어요.</p></div>
     <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">${cards.map(([h,t,s])=>`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
       <div class="qr" data-qr="${APP}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
-    <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>${foot}</div></div>`;
+    <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>
+    ${resetBtn('light')}${foot}</div></div>`;
 },
 
 // ---------- 관객 ----------
@@ -468,7 +469,7 @@ M1(){
       <thead><tr>${['접수','위치','의식·외상','등록 정보','상태','경과'].map(h=>`<th class="text-left text-xs font-semibold text-slate-400 px-3 py-2.5 border-b border-slate-700 bg-slate-900/60">${h}</th>`).join('')}</tr></thead>
       <tbody>${all.map(row).join('')}</tbody></table></div>`
     :'<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 text-center"><div class="text-xl font-black text-white">신고 없음</div><p class="text-sm text-slate-400 mt-1">관객이 팔찌 QR로 신고하면 여기에 바로 뜹니다.</p></div>'}
-    <button class="self-center text-sm text-slate-400 underline underline-offset-4 py-2 px-4" data-act="toHome">QR 화면으로 돌아가기</button>${foot}
+    <div class="flex flex-wrap justify-center gap-3">${resetBtn('dark')}<button class="text-sm text-slate-400 underline underline-offset-4 py-2 px-4" data-act="toHome">QR 화면으로 돌아가기</button></div>${foot}
   </div></div>`;
 },
 
@@ -515,6 +516,15 @@ function stopScan(){
   if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream=null; }
   const v=$('scan-video'); if(v) v.srcObject=null;
   $('scanner').hidden=true;
+}
+
+// 시연 데이터 초기화 버튼 (QR 화면·모니터 아래). 실수 방지로 두 번 눌러야 함
+function resetBtn(tone){
+  const c=V.p.confirm;
+  const cls=tone==='dark'
+    ? (c?'bg-red-600 text-white':'bg-slate-800 text-slate-300 border border-slate-600')
+    : (c?'bg-red-600 text-white':'bg-white text-slate-600 border-2 border-slate-200');
+  return `<button class="${cls} self-center min-h-[44px] px-5 rounded-xl text-sm font-bold flex items-center gap-2" data-act="reset">${ic('rotate-left')} ${c?'한 번 더 누르면 신고·등록이 모두 지워져요':'시연 데이터 초기화'}</button>`;
 }
 
 // ===== 그리기 =====
@@ -636,8 +646,8 @@ const ACT = {
   toHome(){ dset('role',null); location.hash='home'; route(); },
   toS1(){ go('S1'); },
   toS2(id){ go('S2',{id}); },
-  async reset(){ if(!V.p.confirm){ V.p.confirm=true; return render(); }
-    toast('초기화 중…'); await resetAll(); ['role','active','smsOpened','urgentSeen'].forEach(k=>dset(k,null)); known=null; V.p.confirm=false; render(); toast('처음 상태로 되돌렸어요'); }
+  async reset(){ if(!V.p.confirm){ V.p.confirm=true; const s=V.s; setTimeout(()=>{ if(V.s===s&&V.p.confirm){ V.p.confirm=false; render(); } },4000); return render(); }
+    toast('초기화 중…'); await resetAll(); [V.s==='M1'?'':'role','active','smsOpened','urgentSeen'].forEach(k=>k&&dset(k,null)); known=null; V.p.confirm=false; render(); toast('처음 상태로 되돌렸어요'); }
 };
 document.addEventListener('click',e=>{ const el=e.target.closest('[data-act]'); if(!el||el.disabled) return; const f=ACT[el.dataset.act]; if(f) f(el.dataset.arg,el); });
 document.addEventListener('input',e=>{ const k=e.target.dataset&&e.target.dataset.f; if(!k||!V.p.f) return; V.p.f[k]=e.target.type==='checkbox'?e.target.checked:e.target.value; });
