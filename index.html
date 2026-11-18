@@ -3,6 +3,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>STARLIGHT 응급 팔찌 시연</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>window.tailwind&&(tailwind.config={theme:{extend:{colors:{brand:'#C8102E'}}}});</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -18,77 +22,23 @@ const FIREBASE_CONFIG = {
 };
 </script>
 <style>
-/* Layout: 폰 한 열(최대 480px), 모니터만 넓게. 관객=밝은 시안, 스태프·모니터=어두운 공연장용으로 고정 */
-:root{
-  --red:#C8102E; --on-red:#FFFFFF; --ink:#1A1D23; --sub:#5B6270; --line:#E2E4EA;
-  --paper:#FFFFFF; --soft:#F4F5F7; --warnbg:#FCE9EC; --amber:#B45309; --amberbg:#FEF3C7;
-  --green:#15803D; --greenbg:#DCFCE7;
-  --font:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
-  color-scheme:light;
-}
-body.dark{
-  --red:#FF4D5E; --ink:#F2F4F7; --sub:#A0A8B6; --line:#2B313C; --paper:#0E1116; --soft:#181C24;
-  --warnbg:#3B1219; --amber:#FBBF24; --amberbg:#3A2A0A; --green:#4ADE80; --greenbg:#0F2E1C; color-scheme:dark;
-}
-*{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+/* 화면 모양은 Tailwind 클래스(시연화면/등록화면.html·신고화면.html과 같은 언어). 여기에는 클래스로 못 쓰는 것만 둔다 */
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;background:#fff;color:#0f172a;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;color-scheme:light}
+body.dark{background:#0f172a;color:#fff;color-scheme:dark}
 body.flash{animation:flash .5s 3}
-@keyframes flash{50%{box-shadow:inset 0 0 0 10px var(--red)}}
-@media (prefers-reduced-motion:reduce){body.flash{animation:none}}
-.wrap{max-width:480px;margin:0 auto;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
-.wrap.wide{max-width:1200px}
-.brand{font-weight:800;font-size:15px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.brand i{font-style:normal;color:var(--red)}
-h1{font-size:24px;line-height:1.3;margin:0;text-wrap:balance}
-p{margin:0}
-.sub{color:var(--sub);font-size:15px}
-.small{font-size:13px;color:var(--sub)}
-.foot{font-size:12px;color:var(--sub);text-align:center;margin-top:8px}
-.card{background:var(--soft);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.card.line{background:transparent;border:1px solid var(--line)}
-.warn{background:var(--warnbg);color:var(--red);font-weight:800;border-radius:12px;padding:10px 14px}
-.big{font-size:22px;font-weight:900;line-height:1.35}
-.btn{appearance:none;border:0;border-radius:14px;min-height:54px;padding:12px 16px;font:inherit;font-size:17px;font-weight:800;background:var(--soft);color:var(--ink);cursor:pointer;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.btn small{font-size:13px;font-weight:500;opacity:.85}
-.btn.red{background:var(--red);color:var(--on-red)}
-.btn.out{background:transparent;border:2px solid var(--line)}
-.btn.green{background:var(--green);color:var(--paper)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn:focus-visible,.chip:focus-visible{outline:3px solid var(--red);outline-offset:2px}
-.sos{width:180px;height:180px;border-radius:50%;margin:4px auto;font-size:32px;box-shadow:0 0 0 10px var(--warnbg)}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.chip{appearance:none;font:inherit;font-size:15px;font-weight:700;min-height:46px;padding:8px 12px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:var(--on-red)}
-.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--warnbg);color:var(--red)}
-.badge{display:inline-block;font-weight:900;padding:4px 10px;border-radius:8px;font-size:14px}
-.b-urgent{background:var(--red);color:var(--on-red)}
-.b-check{background:var(--amberbg);color:var(--amber)}
-.b-gray{background:var(--soft);color:var(--sub);border:1px solid var(--line)}
-.b-ok{background:var(--greenbg);color:var(--green)}
-label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
-input[type=text]{font:inherit;font-size:17px;min-height:48px;padding:8px 12px;border-radius:10px;border:2px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
-.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px}
-.consent input{width:24px;height:24px;flex:none;margin-top:2px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
-.kv dt{color:var(--sub)} .kv dd{margin:0;font-weight:700;min-width:0}
-ul.g{margin:0;padding-left:20px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end}
-.modal .in{background:var(--paper);width:100%;border-top:3px solid var(--red);border-radius:18px 18px 0 0;max-height:90vh;overflow:auto;padding-block:16px calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.modal .box{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-pre.msg{white-space:pre-wrap;font:inherit;font-size:15px;background:var(--soft);border-radius:10px;padding:12px;margin:0}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:12px;font-weight:700;z-index:30;max-width:calc(100% - 32px);text-align:center}
-.tbl{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:16px}
-th{text-align:left;color:var(--sub);font-size:13px;font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
-td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-tr.done td{opacity:.45}
-tr.new td{background:var(--warnbg)}
-.num{font-variant-numeric:tabular-nums}
-.qrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.qr{background:#fff;padding:8px;border-radius:10px}
+@keyframes flash{50%{box-shadow:inset 0 0 0 10px #ef4444}}
+@keyframes pulse-ring{0%{transform:scale(.96);box-shadow:0 0 0 0 rgba(200,16,46,.6)}70%{transform:scale(1.02);box-shadow:0 0 0 18px rgba(200,16,46,0)}100%{transform:scale(.96);box-shadow:0 0 0 0 rgba(200,16,46,0)}}
+.emergency-pulse{animation:pulse-ring 2s infinite cubic-bezier(.4,0,.6,1)}
+.emergency-pulse:disabled{animation:none}
+@media (prefers-reduced-motion:reduce){body.flash,.emergency-pulse{animation:none}}
+button:focus-visible,input:focus-visible{outline:3px solid #C8102E;outline-offset:2px}
+.safe-b{padding-bottom:calc(1.25rem + env(safe-area-inset-bottom,0px))}
+.qr{background:#fff;padding:8px;border-radius:12px}
 .qr img,.qr canvas{display:block;width:180px;max-width:100%;height:auto}
-.count{font-size:40px;font-weight:900;color:var(--red);font-variant-numeric:tabular-nums}
+tr.done td{opacity:.45}
+tr.new td{background:rgba(239,68,68,.15)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 18px;border-radius:12px;font-weight:700;z-index:30;max-width:calc(100% - 32px);text-align:center;box-shadow:0 10px 25px -10px rgba(0,0,0,.4)}
+body.dark .toast{background:#fff;color:#0f172a}
 </style>
 
 </head><body>
@@ -107,8 +57,8 @@ const ZONES = {
 const ZONE_IDS = Object.keys(ZONES);
 const SHORT = {'STAND-A':'스탠딩 A','STAND-B':'스탠딩 B','STAND-C':'스탠딩 C','STAND-D':'스탠딩 D','SEAT-1F':'1층 좌석','SEAT-2F':'2층 좌석'};
 const CONDS = ['심장 질환','당뇨','천식','뇌전증','알레르기','기타'];
-const MEDS = ['사탕·당분','에피네프린 자가주사기','흡입기','기타 상비약'];
-const medsText = b => (b.meds&&b.meds.length) ? b.meds.join(', ')+(b.medsWhere?' ('+b.medsWhere+')':'') : '';
+// 가지고 있는 약: 자유 입력(medsText) + 둔 곳(medsWhere)
+const medsText = b => b.medsText ? b.medsText+(b.medsWhere?' ('+b.medsWhere+')':'') : '';
 const BANDS = ['0001','0002'];
 const SEED = { // 예시 2개: 0001은 발표 때 직접 등록, 0002는 미리 등록된 예시
   '0001':{registered:false},
@@ -144,7 +94,7 @@ function cardRows(r,b){ // 이 신고에 맞는 줄을 위로
   return [...CARD.filter(x=>hit.has(x[0])).map(x=>[...x,true]), ...CARD.filter(x=>!hit.has(x[0])).map(x=>[...x,false])];
 }
 const STATUS = {received:'접수',dispatched:'출동 중',verified:'도착·확인',closed:'종료',cancelled:'취소됨'};
-const seedBand = id => Object.assign({registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],meds:[],medsWhere:'',consent:false}, SEED[id]||{});
+const seedBand = id => Object.assign({registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],medsText:'',medsWhere:'',consent:false}, SEED[id]||{});
 
 // ===== 유틸 =====
 const $ = id => document.getElementById(id);
@@ -207,9 +157,10 @@ const openReports = () => Object.values(S.reports).filter(isOpen).sort((a,b)=>b.
 const allReports = () => Object.values(S.reports).sort((a,b)=>(isOpen(b)-isOpen(a))||(b.createdAt-a.createdAt));
 function seatLabel(b){ if(!b.zoneId) return ''; const z=ZONES[b.zoneId]; return z.stand?z.name:(b.seatDetail?z.floor+' '+b.seatDetail:z.name); }
 function badge(r){
-  if(r.status==='cancelled') return '<span class="badge b-gray">취소됨</span>';
-  if(r.status==='closed') return '<span class="badge b-ok">종료</span>';
-  return r.consciousness==='없음' ? '<span class="badge b-urgent">긴급</span>' : '<span class="badge b-check">확인 필요</span>';
+  const t=(s,c)=>`<span class="inline-block shrink-0 text-xs font-black px-2.5 py-0.5 rounded-md tracking-wider ${c}">${s}</span>`;
+  if(r.status==='cancelled') return t('취소됨','bg-slate-700 text-slate-300');
+  if(r.status==='closed') return t('종료','bg-emerald-500/20 text-emerald-300');
+  return r.consciousness==='없음' ? t('긴급','bg-red-600 text-white') : t('확인 필요','bg-amber-400 text-slate-900');
 }
 
 // ===== 화면 상태 =====
@@ -224,51 +175,110 @@ function autoSms(){
   if(!r||!isOpen(r)||r.consciousness!=='없음'||opened.includes(r.id)) return false;
   opened.push(r.id); dset('smsOpened',opened); V.p.sms=true; return true;
 }
-const brand = (t,r) => `<div class="brand"><span><i>★</i> STARLIGHT LIVE ${esc(t)}</span>${r||''}</div>`;
-const foot = '<p class="foot">시연용 화면입니다. 실제 신고·전화·문자는 되지 않습니다.</p>';
+// ===== 화면 조각 (시연화면/등록화면.html·신고화면.html 디자인) =====
+const ic = (n,c) => `<i class="fa-solid fa-${n}${c?' '+c:''}" aria-hidden="true"></i>`;
+const COL = 'min-h-[100dvh] max-w-[480px] mx-auto flex flex-col';
+const BTN_RED = 'w-full min-h-[56px] px-4 bg-brand hover:bg-[#b00d27] active:scale-[0.98] text-white font-bold text-base rounded-2xl shadow-lg shadow-red-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-40';
+const INP = 'w-full min-w-0 h-12 px-4 rounded-xl border border-slate-300 focus:border-brand focus:ring-2 focus:ring-red-100 outline-none text-base text-slate-900 bg-white font-medium placeholder:text-slate-400';
+const pill = (t,c) => `<span class="shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full ${c}">${t}</span>`;
+// 관객용 밝은 헤더 (★ STARLIGHT LIVE …)
+const lhdr = (t,right,back) => `<header class="sticky top-0 z-10 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between gap-2">
+  <div class="flex items-center gap-2 min-w-0">${back?`<button type="button" data-act="${back}" aria-label="뒤로" class="w-10 h-10 -ml-3 flex items-center justify-center text-slate-400 hover:text-slate-600">${ic('chevron-left')}</button>`:''}<span class="text-brand font-black text-lg">★</span><h2 class="text-sm font-bold tracking-tight text-slate-900 truncate">STARLIGHT LIVE ${esc(t)}</h2></div>${right||''}</header>`;
+// 스태프·모니터용 어두운 헤더
+const dhdr = (t,right,dot) => `<header class="sticky top-0 z-10 bg-slate-950 border-b border-slate-800 px-5 py-3.5 flex items-center justify-between gap-2">
+  <div class="flex items-center gap-2 min-w-0"><span class="w-2.5 h-2.5 shrink-0 rounded-full ${dot?dot+' animate-pulse':'bg-slate-600'}"></span><h2 class="text-sm font-extrabold tracking-tight text-white truncate">${esc(t)}</h2></div>${right||''}</header>`;
+const foot = '<p class="text-xs text-center text-slate-400 pt-2">시연용 화면입니다. 실제 신고·전화·문자는 되지 않습니다.</p>';
+// 밝은 화면 선택 버튼 (aria-pressed 유지)
+const chip = (on,act,arg,label,warn) => `<button type="button" aria-pressed="${on}" data-act="${act}" data-arg="${esc(arg)}" class="min-h-[44px] px-3 rounded-xl text-sm border-2 flex items-center justify-center gap-1.5 transition-colors ${on?'font-bold border-brand bg-red-50 text-brand shadow-sm':'font-medium border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'}">${on?ic(warn?'triangle-exclamation':'check','text-[11px]'):''}${esc(label)}</button>`;
+// 어두운 화면 상태 표시 (의식·외상)
+const stChip = (k,v) => { const c = k==='의식'&&v==='없음' ? 'bg-red-500/20 border border-red-500/40 text-red-300 font-bold'
+  : k==='의식'&&v==='있음' ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold'
+  : k==='외상'&&v==='있음' ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold' : 'bg-slate-700 text-slate-300 font-medium';
+  return `<span class="inline-block px-2 py-0.5 rounded text-sm ${c}">${k}: ${esc(v||'모름')}</span>`; };
+const src = r => r.source==='place'?'펜스 QR 신고':'팔찌 QR 신고';
+// 등록 정보 카드 (스태프 화면)
+function regCard(b,o){
+  o=o||{};
+  if(!(b&&b.registered)) return `<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4"><span class="text-sm font-bold text-slate-300 flex items-center gap-1.5">${ic('circle-question','text-slate-400')} ${o.none||'등록 정보 없음'}</span>${o.extra||''}</div>`;
+  const m=medsText(b);
+  return `<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4">
+    <div class="flex items-start justify-between gap-2 mb-1"><span class="text-sm font-bold text-amber-400 flex items-center gap-1.5 min-w-0">${ic(o.urgent?'shield-heart':'notes-medical')} 등록 정보: 지병 ${esc(b.conditions.join(', ')||'없음')}</span><span class="shrink-0 text-[11px] font-semibold text-slate-400 bg-slate-700/70 px-2 py-0.5 rounded">스태프·의료팀만 보임</span></div>
+    ${m?`<p class="text-sm font-bold text-rose-300 mt-1.5">${ic('capsules')} 가진 약: ${esc(m)}${o.help?' → 본인이 쓰도록 돕기':''}</p>`:''}
+    <p class="text-sm text-slate-300 mt-1.5">이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')} <span class="text-slate-400">(사전 등록 정보)</span></p>${o.extra||''}</div>`;
+}
+const loading = '<div class="p-8 text-center text-slate-500">불러오는 중…</div>';
 
 const SCREENS = {
 HOME(){
   const cards=[['band-0001','팔찌 #0001','관객 폰 · 처음엔 등록, 다시 찍으면 신고'],['band-0002','팔찌 #0002','예시 등록 팔찌 · 스태프 폰으로 찍으면 환자 확인'],
     ['qr-STAND-C','스탠딩 C구역 펜스','관객 폰 · 구역 자동 신고'],['staff','STAFF 전용','스태프 폰으로 찍기']];
-  return `<div class="wrap wide">${brand('응급 팔찌 시연')}
-  <h1>폰 카메라로 QR을 찍으세요</h1>
-  <p class="sub">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 로그인은 필요 없어요.</p>
-  <div class="qrs">${cards.map(([h,t,s])=>`<div class="card line" style="align-items:center;text-align:center"><div class="qr" data-qr="${APP}#${h}"></div><b>${t}</b><span class="small">${s}</span></div>`).join('')}</div>
-  <button class="btn red" data-act="toMonitor" style="max-width:420px;align-self:center">이 노트북을 응급처치실 모니터로 쓰기</button>${foot}</div>`;
+  return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${lhdr('응급 팔찌 시연',pill('QR 허브','text-brand bg-red-50'))}
+  <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
+    <div><h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">폰 카메라로 QR을 찍으세요</h1>
+      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 로그인은 필요 없어요.</p></div>
+    <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">${cards.map(([h,t,s])=>`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
+      <div class="qr" data-qr="${APP}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
+    <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>${foot}</div></div>`;
 },
 
 // ---------- 관객 ----------
-A1(p){ return `<div class="wrap">${brand('응급 팔찌 등록')}
-  <h1>내 팔찌 등록하기</h1>
-  <p class="sub">정보를 넣어 두면 응급 시 더 빨리 도울 수 있어요</p>
-  <div class="card"><b>STARLIGHT LIVE BAND #${esc(p.band)}</b><p class="small">입력한 정보는 응급 시 스태프·의료팀만 볼 수 있어요.</p></div>
-  <button class="btn red" data-act="startReg">등록 시작</button>
-  <button class="btn out" data-act="toReport">응급 신고하기<small>입력하지 않아도 신고는 똑같이 돼요</small></button>${foot}</div>`; },
+A1(p){ return `<div class="${COL}">${lhdr('응급 팔찌 등록',pill('1 / 3','text-slate-400 bg-slate-100'))}
+  <div class="flex-1 p-6 flex flex-col justify-between gap-6 safe-b">
+    <div class="flex flex-col items-center text-center mt-2">
+      <div class="relative w-56 h-44 rounded-3xl bg-red-50 mb-5" aria-hidden="true">
+        <div class="absolute left-8 top-8 w-16 h-28 rounded-xl border-4 border-slate-800 bg-white flex items-center justify-center text-brand text-2xl">${ic('qrcode')}</div>
+        <div class="absolute right-6 bottom-10 w-28 h-12 rounded-full bg-brand flex items-center justify-center shadow-md"><span class="w-9 h-9 rounded-full bg-white text-brand flex items-center justify-center text-lg font-black">★</span></div>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-brand text-xs font-bold mb-3">${ic('qrcode')} 팔찌 QR 인식 완료</div>
+      <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">내 팔찌 등록하기</h1>
+      <p class="text-slate-600 text-sm leading-relaxed px-2">정보를 넣어 두면 응급 시 더 빨리 도울 수 있어요</p>
+      <div class="w-full mt-6 bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0 text-sm">${ic('shield-halved')}</div>
+        <div class="space-y-1 min-w-0"><p class="text-sm font-bold text-slate-800">STARLIGHT LIVE BAND #${esc(p.band)}</p><p class="text-xs leading-normal text-slate-500">입력한 정보는 응급 시 스태프·의료팀만 볼 수 있어요.</p></div>
+      </div>
+    </div>
+    <div class="w-full flex flex-col gap-2">
+      <button class="${BTN_RED}" data-act="startReg">등록 시작 ${ic('arrow-right','text-sm')}</button>
+      <button class="w-full min-h-[48px] py-3 text-slate-500 hover:text-slate-700 text-sm font-medium underline-offset-4 hover:underline" data-act="toReport">응급 신고하기 — 입력하지 않아도 신고는 똑같이 돼요</button>${foot}
+    </div>
+  </div></div>`; },
 
 A2(p){
-  if(p.done){ const b=getBand(p.band); return `<div class="wrap">${brand('응급 팔찌 등록')}
-    <h1>등록됐어요!</h1><p class="sub">응급 시 스태프·의료팀만 볼 수 있어요</p>
-    <div class="card"><dl class="kv"><dt>팔찌</dt><dd>STARLIGHT LIVE BAND #${esc(p.band)}</dd><dt>좌석</dt><dd>${esc(seatLabel(b)||'미입력')}</dd></dl></div>
-    <p class="sub">응급 상황이 생기면 팔찌 QR을 다시 찍으세요</p>${foot}</div>`; }
+  if(p.done){ const b=getBand(p.band); return `<div class="${COL}">${lhdr('응급 팔찌 등록',pill('3 / 3','text-emerald-700 bg-emerald-50'))}
+    <div class="flex-1 p-6 flex flex-col justify-between gap-6 safe-b"><div>
+      <div class="text-center mt-3 mb-6">
+        <div class="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-500/30 text-emerald-600 mx-auto flex items-center justify-center text-2xl mb-3 shadow-inner">${ic('check')}</div>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">등록됐어요!</h1>
+        <p class="text-slate-600 text-sm leading-relaxed">응급 시 스태프·의료팀만 볼 수 있어요</p></div>
+      <div class="bg-slate-50 border border-slate-200/90 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-slate-500 tracking-wider">연결된 팔찌 ID</span><span class="text-xs font-bold text-brand bg-red-50 px-2 py-0.5 rounded">QR 등록됨</span></div>
+        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white shrink-0">★</div>
+          <div class="min-w-0"><p class="text-sm font-bold text-slate-800">STARLIGHT LIVE BAND #${esc(p.band)}</p><p class="text-xs text-slate-500">좌석: ${esc(seatLabel(b)||'미입력')}</p></div></div>
+      </div></div>
+      <div><p class="text-sm text-slate-500 text-center font-medium">응급 상황이 생기면 팔찌 QR을 다시 찍으세요</p>${foot}</div>
+    </div></div>`; }
   const F=p.f, seat=F.zoneId&&!ZONES[F.zoneId].stand;
-  return `<div class="wrap">${brand('응급 팔찌 등록')}
-  <h1>응급 정보 입력</h1><p class="sub">모두 선택 사항이에요. 넣어 둔 만큼 더 빨리 도울 수 있어요.</p>
-  <label class="f">이름 (선택)<input type="text" id="f-name" data-f="name" maxlength="10" value="${esc(F.name)}"></label>
-  <label class="f">연락처 (선택)<input type="text" id="f-phone" data-f="phone" inputmode="tel" maxlength="13" value="${esc(F.phone)}"></label>
-  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">좌석 (스탠딩은 구역 선택)</b>
-    <div class="grid3">${ZONE_IDS.map(z=>`<button class="chip" aria-pressed="${F.zoneId===z}" data-act="fzone" data-arg="${z}">${SHORT[z]}</button>`).join('')}</div>
-    ${seat?`<input type="text" id="f-seat" data-f="seatDetail" placeholder="예: B구역 5열 12번" value="${esc(F.seatDetail)}">`:''}</div>
-  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">지병 (선택)</b><p class="small">앓고 있는 병이 있으면 골라 주세요.</p>
-    <div class="grid3">${CONDS.map(c=>`<button class="chip" aria-pressed="${F.conditions.includes(c)}" data-act="fcond" data-arg="${c}">${c}</button>`).join('')}</div></div>
-  <div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">지금 가지고 있는 약 (선택)</b>
-    <p class="small">응급 시 스태프가 본인 약을 쓰도록 도와요. 스태프가 약을 대신 주지는 않아요.</p>
-    <div class="row">${MEDS.map(m=>`<button class="chip" aria-pressed="${F.meds.includes(m)}" data-act="fmed" data-arg="${m}">${m}</button>`).join('')}</div>
-    ${F.meds.length?`<input type="text" id="f-medswhere" data-f="medsWhere" maxlength="30" placeholder="어디에 있나요? 예: 가방 앞주머니" value="${esc(F.medsWhere)}">`:''}</div>
-  <div class="card line"><b style="font-size:14px">[필수 아님] 민감정보(지병·가지고 있는 약) 수집·이용 동의</b>
-    <p class="small">목적: 응급 대응 · 보관: 공연 종료 후 24시간 안 파기 · 동의하지 않아도 신고 가능</p>
-    <label class="consent"><input type="checkbox" id="f-consent" data-f="consent" ${F.consent?'checked':''}> 동의합니다</label></div>
-  <button class="btn red" data-act="save">저장</button>${foot}</div>`;
+  const lab=(t,r)=>`<span class="flex items-center justify-between mb-1.5 gap-2"><span class="text-sm font-bold text-slate-700">${t}</span><span class="text-xs text-slate-400 font-semibold text-right">${r}</span></span>`;
+  return `<div class="${COL}">${lhdr('응급 팔찌 등록',pill('2 / 3','text-brand bg-red-50'),'backA1')}
+  <div class="flex-1 p-5 space-y-5 safe-b">
+    <div><h1 class="text-xl font-bold text-slate-900">응급 정보 입력</h1><p class="text-sm text-slate-500 mt-0.5">모두 선택 사항이에요. 넣어 둔 만큼 더 빨리 도울 수 있어요.</p></div>
+    <label class="block">${lab('이름','선택')}<input type="text" id="f-name" data-f="name" maxlength="10" placeholder="이름을 입력해 주세요" value="${esc(F.name)}" class="${INP}"></label>
+    <label class="block">${lab('연락처','선택')}<input type="text" id="f-phone" data-f="phone" inputmode="tel" maxlength="13" placeholder="010-0000-0000" value="${esc(F.phone)}" class="${INP}"></label>
+    <div>${lab('좌석 (스탠딩은 구역 선택)','선택')}
+      <div class="grid grid-cols-3 gap-2">${ZONE_IDS.map(z=>chip(F.zoneId===z,'fzone',z,SHORT[z])).join('')}</div>
+      ${seat?`<input type="text" id="f-seat" data-f="seatDetail" placeholder="예: B구역 5열 12번" aria-label="좌석 번호" value="${esc(F.seatDetail)}" class="${INP} mt-2">`:''}</div>
+    <div>${lab('지병 (선택)','다중 선택 가능')}
+      <div class="flex flex-wrap gap-2">${CONDS.map(c=>chip(F.conditions.includes(c),'fcond',c,c)).join('')}</div></div>
+    <div>${lab('지금 가지고 있는 약 (선택)','본인 약 사용을 도와요')}
+      <input type="text" id="f-meds" data-f="medsText" maxlength="60" aria-label="지금 가지고 있는 약" placeholder="예: 저혈당용 사탕, 에피네프린 자가주사기, 흡입기" value="${esc(F.medsText)}" class="${INP}">
+      <label class="mt-2 flex items-center gap-2"><span class="shrink-0 text-sm font-bold text-slate-600">둔 곳</span><input type="text" id="f-medswhere" data-f="medsWhere" maxlength="30" placeholder="예: 가방 앞주머니" value="${esc(F.medsWhere)}" class="${INP}"></label>
+      <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">응급 시 스태프가 본인 약을 쓰도록 도와요. 약을 대신 주지는 않아요.</p></div>
+    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl"><label class="flex items-start gap-3 cursor-pointer">
+      <input type="checkbox" id="f-consent" data-f="consent" ${F.consent?'checked':''} class="mt-0.5 w-6 h-6 rounded accent-[#C8102E] shrink-0">
+      <span class="block text-xs leading-relaxed text-slate-600"><span class="text-sm font-bold text-slate-800">[필수 아님] 민감정보(지병·가지고 있는 약) 수집·이용 동의</span>
+        <span class="block mt-1 space-y-0.5 text-slate-500"><span class="block">• 목적: 응급 대응</span><span class="block">• 보관: 공연 종료 후 24시간 안 파기</span><span class="block">• 동의하지 않아도 신고 가능</span></span></span></label></div>
+    <button class="${BTN_RED}" data-act="save">저장 ${ic('check','text-sm')}</button>${foot}
+  </div></div>`;
 },
 
 A3(p){
@@ -279,55 +289,85 @@ A3(p){
   else { zoneId=p.zone||null; tag='층·구역을 골라 주세요'; }
   const pick=!p.place&&!(b&&b.registered&&b.zoneId);
   const stand=zoneId&&ZONES[zoneId].stand;
-  return `<div class="wrap">${brand('응급 신고')}
-  <div class="warn">의식·호흡이 없으면 119 먼저</div>
-  <div class="card"><div class="row" style="justify-content:space-between"><b>현재 위치</b><span class="tag">${tag}</span></div>
-    ${pick?`<div class="grid3">${ZONE_IDS.map(z=>`<button class="chip" aria-pressed="${zoneId===z}" data-act="pzone" data-arg="${z}">${SHORT[z]}</button>`).join('')}</div>`:`<div class="big">${esc(label)}</div>`}
-    ${stand?`<div class="row">${['앞','중간','뒤'].map(x=>`<button class="chip" aria-pressed="${p.pos===x}" data-act="ppos" data-arg="${x}">${x}</button>`).join('')}</div>`:''}</div>
-  <p class="small" style="text-align:center">버튼을 누르면 응급처치실과 구역 스태프에게 바로 전송됩니다</p>
-  <button class="btn red sos" data-act="send" ${zoneId&&!p.sending?'':'disabled'}>${p.sending?'전송 중…':'신고'}</button>${foot}</div>`;
+  return `<div class="${COL}">${lhdr('응급 신고',pill(`<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${p.place?'펜스 QR':'팔찌 QR'}</span>`,'text-emerald-700 bg-emerald-50 border border-emerald-200'))}
+  <div class="flex-1 p-5 flex flex-col gap-4 safe-b">
+    <div class="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 flex items-start gap-3 shadow-sm">
+      <div class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 text-sm font-black" aria-hidden="true">!</div>
+      <div><p class="text-base font-bold text-amber-900 leading-snug">의식·호흡이 없으면 119 먼저</p><p class="text-xs text-amber-700 leading-snug mt-0.5">심정지가 의심되면 바로 119에 전화하세요</p></div></div>
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+      <div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-bold text-slate-500 flex items-center gap-1">${ic('location-dot','text-slate-400')} 현재 위치</span><span class="text-xs font-semibold px-2 py-0.5 rounded ${pick?'text-amber-800 bg-amber-100':'text-emerald-700 bg-emerald-100/70'}">${tag}</span></div>
+      ${pick?`<div class="grid grid-cols-3 gap-2">${ZONE_IDS.map(z=>chip(zoneId===z,'pzone',z,SHORT[z])).join('')}</div>`:`<div class="text-2xl font-black text-slate-900 tracking-tight">${esc(label)}</div>`}
+      ${stand?`<div class="grid grid-cols-3 gap-2 mt-3">${['앞','중간','뒤'].map(x=>chip(p.pos===x,'ppos',x,x)).join('')}</div>`:''}</div>
+    <p class="text-sm text-slate-500 text-center leading-relaxed">버튼을 누르면 응급처치실과 구역 스태프에게 바로 전송됩니다</p>
+    <div class="flex justify-center py-4 my-auto">
+      <button class="w-48 h-48 rounded-full bg-brand text-white flex flex-col items-center justify-center shadow-2xl emergency-pulse hover:bg-[#b00d27] active:scale-95 transition-all disabled:opacity-40 disabled:shadow-none" data-act="send" ${zoneId&&!p.sending?'':'disabled'}>
+        ${ic(p.sending?'spinner':'bell','text-3xl mb-2'+(p.sending?' animate-spin':''))}<span class="text-3xl font-black tracking-tight">${p.sending?'전송 중…':'신고'}</span><span class="text-xs opacity-80 mt-1">${zoneId?'터치 시 즉시 출동':'위치를 먼저 골라 주세요'}</span></button></div>
+    <div><p class="text-xs text-slate-400 text-center">누른 직후 스태프가 출동하고, 10초 안에는 취소할 수 있어요.</p>${foot}</div>
+  </div></div>`;
 },
 
 A4(p){
-  const r=S.reports[p.id]; if(!r) return `<div class="wrap"><p>불러오는 중…</p></div>`;
-  const chips=(f,vals)=>vals.map(v=>`<button class="chip" aria-pressed="${r[f]===v}" data-act="pick" data-arg="${f}|${v}">${v}</button>`).join('');
+  const r=S.reports[p.id]; if(!r) return loading;
   const prog={received:'스태프에게 알림이 갔어요',dispatched:'스태프가 출동했어요',verified:'스태프가 도착했어요',closed:'인계가 끝났어요',cancelled:'신고를 취소했어요'}[r.status];
-  return `<div class="wrap">${brand('응급 신고')}
-  ${r.consciousness==='없음'&&isOpen(r)?`<div class="card" style="background:var(--red);color:var(--on-red)"><div class="big">지금 119에 전화하고<br>가슴압박을 하세요</div>
-    <p>스태프가 AED를 가지고 가고 있어요</p><p class="small" style="color:inherit">주변 관객에게 "도와주세요! 119 통화 중입니다"라고 알리세요.</p></div>`:''}
-  <h1>${r.status==='cancelled'?'신고를 취소했어요':'신고가 접수됐어요.<br>스태프가 가고 있어요'}</h1>
-  <div class="card"><dl class="kv"><dt>위치</dt><dd>${esc(r.locationLabel)}</dd><dt>진행</dt><dd>${prog}</dd></dl></div>
-  ${r.status==='received'?`<button class="btn out" data-act="cancel" data-until="${r.createdAt+10000}">실수로 눌렀어요 (10초 안에 취소)</button>`:''}
-  ${r.status!=='cancelled'?`<div class="card line"><b>추가 상태 전달 (선택)</b>
-    <p class="small">의식</p><div class="row">${chips('consciousness',['있음','없음','모르겠음'])}</div>
-    <p class="small">외상</p><div class="row">${chips('trauma',['있음','없음'])}</div>
-    <p class="small">고르지 않아도 출동합니다</p></div>`:''}${foot}</div>`;
+  const open=isOpen(r), cancelled=r.status==='cancelled', urgent=r.consciousness==='없음'&&open;
+  return `<div class="${COL}">${lhdr('응급 신고',cancelled?pill('취소됨','text-slate-600 bg-slate-100'):urgent?pill('최우선 응급','font-bold text-white bg-brand'):pill('접수 완료','text-emerald-700 bg-emerald-50'))}
+  <div class="flex-1 p-5 flex flex-col justify-between gap-5 safe-b"><div class="flex flex-col gap-4">
+    ${urgent?`<div class="bg-red-50/90 border-2 border-red-200 rounded-2xl p-4 text-center"><h2 class="text-lg font-black text-brand leading-snug">지금 119에 전화하고<br>가슴압박을 하세요</h2>
+      <p class="text-sm text-slate-600 mt-1">스태프가 AED를 가지고 가고 있어요</p><p class="text-xs text-slate-500 mt-1">주변 관객에게 "도와주세요! 119 통화 중입니다"라고 알리세요.</p></div>`:''}
+    <div class="text-center mt-1">
+      <div class="w-16 h-16 rounded-full ${cancelled?'bg-slate-100 border-2 border-slate-300 text-slate-500':'bg-emerald-50 border-2 border-emerald-500/30 text-emerald-600'} mx-auto flex items-center justify-center text-2xl mb-3 shadow-inner">${ic(cancelled?'xmark':'check')}</div>
+      <h1 class="text-xl font-extrabold text-slate-900 leading-snug">${cancelled?'신고를 취소했어요':'신고가 접수됐어요.<br>스태프가 가고 있어요'}</h1>
+      <p class="text-sm text-slate-500 mt-1.5">위치: ${esc(r.locationLabel)}</p>
+      <p class="inline-flex items-center gap-1.5 mt-2 text-xs font-bold px-2.5 py-1 rounded-full ${cancelled?'bg-slate-100 text-slate-600':'bg-emerald-50 text-emerald-700'}">${ic('circle-info')} ${prog}</p></div>
+    ${r.status==='received'?`<button class="w-full min-h-[52px] bg-slate-100 hover:bg-slate-200 active:scale-[0.99] text-slate-700 font-bold text-sm rounded-xl border border-slate-200 flex items-center justify-center gap-2 transition-all" data-act="cancel" data-until="${r.createdAt+10000}">${ic('clock','text-slate-500')}<span data-cd>실수로 눌렀어요 (10초 안에 취소)</span></button>`:''}
+    ${!cancelled?`<div class="pt-5 border-t border-slate-100">
+      <div class="flex items-center justify-between gap-2 mb-3"><span class="text-sm font-bold text-slate-800 flex items-center gap-1.5">${ic('bolt','text-brand')} 추가 상태 전달 (선택)</span><span class="shrink-0 text-xs text-brand font-semibold bg-red-50 px-2 py-0.5 rounded">원터치 선택</span></div>
+      <div class="text-xs font-bold text-slate-600 mb-1.5">의식</div>
+      <div class="grid grid-cols-3 gap-2 mb-3.5">${['있음','없음','모르겠음'].map(v=>chip(r.consciousness===v,'pick','consciousness|'+v,v,v==='없음')).join('')}</div>
+      <div class="text-xs font-bold text-slate-600 mb-1.5">외상</div>
+      <div class="grid grid-cols-2 gap-2">${['있음','없음'].map(v=>chip(r.trauma===v,'pick','trauma|'+v,v)).join('')}</div>
+      <p class="text-xs text-slate-400 text-center mt-3">고르지 않아도 출동합니다</p></div>`:''}
+  </div>
+  <div>${open?'<p class="text-xs text-slate-400 text-center">스태프가 빠르게 이동 중이에요. 자리를 지켜 주세요.</p>':''}${foot}</div></div></div>`;
 },
 
 A5(p){
-  const r=S.reports[p.id]; if(!r) return `<div class="wrap"><p>불러오는 중…</p></div>`;
+  const r=S.reports[p.id]; if(!r) return loading;
   const prog={received:'스태프에게 알림이 갔어요',dispatched:'스태프가 AED를 가지고 오고 있어요',verified:'스태프가 도착했어요',closed:'인계가 끝났어요',cancelled:'신고를 취소했어요'}[r.status];
-  return `<div class="wrap">${brand('응급 신고')}
-  <div class="card" style="background:var(--red);color:var(--on-red);padding:24px 18px">
-    <div class="big" style="font-size:30px">지금 119에 전화하고<br>가슴압박을 하세요</div>
-    <p>환자가 반응하지 않으며 호흡이 없거나 비정상적입니다</p></div>
-  <div class="card"><b>1. 119에 전화하기</b><p class="small">시연에서는 전화가 걸리지 않아요.</p>
-    <b>2. 가슴 한가운데를 세게, 빠르게 누르기</b>
-    <b>3. 주변에 알리기</b><p class="small">"도와주세요! 119 통화 중입니다"</p></div>
-  <div class="card line"><dl class="kv"><dt>위치</dt><dd>${esc(r.locationLabel)}</dd><dt>진행</dt><dd>${prog}</dd></dl></div>
-  <button class="btn out" data-act="backA4">신고 화면으로 돌아가기</button>${foot}</div>`;
+  return `<div class="${COL}">${lhdr('응급 신고',pill('최우선 응급','font-bold text-white bg-brand'))}
+  <div class="flex-1 p-5 flex flex-col gap-4 safe-b">
+    <div class="bg-red-50/90 border-2 border-red-200 rounded-2xl p-5 text-center">
+      <div class="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-2xl mx-auto mb-3 shadow-md">${ic('heart-pulse')}</div>
+      <h1 class="text-2xl font-black text-brand leading-snug tracking-tight">지금 119에 전화하고<br>가슴압박을 하세요</h1>
+      <p class="text-sm text-slate-600 mt-2 leading-relaxed">환자가 반응하지 않으며 호흡이 없거나 비정상적입니다</p></div>
+    <button class="${BTN_RED} text-lg font-extrabold" data-act="call119">${ic('phone')} 119 전화하기</button>
+    <p class="text-xs text-slate-400 text-center -mt-2">시연에서는 전화가 걸리지 않아요.</p>
+    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-sm text-slate-700">
+      <p class="flex gap-2.5"><b class="text-brand">1</b><span>119에 전화하기</span></p>
+      <p class="flex gap-2.5"><b class="text-brand">2</b><span>가슴 한가운데를 세게, 빠르게 누르기</span></p>
+      <p class="flex gap-2.5"><b class="text-brand">3</b><span>주변에 알리기: "도와주세요! 119 통화 중입니다"</span></p></div>
+    <div class="p-4 bg-slate-900 text-white rounded-2xl flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shrink-0">${ic('bolt')}</div>
+      <div class="min-w-0"><p class="text-sm font-bold leading-tight">${prog}</p><p class="text-xs text-slate-400 mt-0.5">위치: ${esc(r.locationLabel)}</p></div></div>
+    <button class="w-full min-h-[52px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl border border-slate-200 flex items-center justify-center gap-2" data-act="backA4">${ic('arrow-left')} 신고 화면으로 돌아가기</button>${foot}
+  </div></div>`;
 },
 
 // ---------- 스태프 ----------
 S1(){
-  const list=openReports();
-  const card=r=>`<div class="card" style="border:2px solid ${r.consciousness==='없음'?'var(--red)':'var(--line)'}">
-    <div class="row" style="justify-content:space-between;align-items:center">${badge(r)}<span class="small num">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과</span></div>
-    <div class="big">응급 신고 · ${esc(r.locationLabel)}</div>
-    <p class="small">${r.source==='place'?'펜스 QR 신고':'팔찌 QR 신고'} · 의식 ${esc(r.consciousness||'모름')} · 외상 ${esc(r.trauma||'모름')} · ${STATUS[r.status]}</p>
-    <button class="btn red" data-act="dispatch" data-arg="${r.id}">${r.status==='received'?'출동':'출동 화면 열기'}</button></div>`;
-  return `<div class="wrap">${brand('STAFF 알림')}
-  ${list.length?list.map(card).join(''):`<div class="card"><div class="big">신고 대기 중</div><p class="small">신고가 들어오면 화면이 깜박이고 진동이 울려요. 화면을 켠 채로 두세요.</p></div>`}${foot}</div>`;
+  const list=openReports(), urgentN=list.filter(r=>r.consciousness==='없음').length;
+  const card=r=>{ const u=r.consciousness==='없음';
+    return `<div class="bg-slate-800/90 ${u?'border-2 border-red-500/70':'border border-slate-700'} rounded-2xl p-4 space-y-3">
+      <div class="flex items-center justify-between gap-2">${badge(r)}<span class="text-xs text-slate-400 font-semibold tabular-nums">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과</span></div>
+      <div class="text-lg font-black text-white leading-tight">응급 신고 · ${esc(r.locationLabel)}</div>
+      <div class="flex flex-wrap items-center gap-2">${stChip('의식',r.consciousness)}${stChip('외상',r.trauma)}<span class="text-xs text-slate-400">${src(r)} · ${STATUS[r.status]}</span></div>
+      <button class="w-full min-h-[52px] rounded-xl font-bold text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${u?'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg':'bg-amber-400 text-slate-900'}" data-act="dispatch" data-arg="${r.id}">${ic('person-running')} ${r.status==='received'?'출동':'출동 화면 열기'}</button></div>`; };
+  const right=list.length?`<span class="shrink-0 text-xs font-black px-2.5 py-0.5 rounded-md tracking-wider ${urgentN?'bg-red-600 text-white':'bg-amber-400 text-slate-900'}">${urgentN?'긴급 '+urgentN:'확인 필요 '+list.length}건</span>`:'<span class="text-xs font-semibold text-slate-400">대기 중</span>';
+  return `<div class="${COL}">${dhdr('STAFF 알림',right,list.length?(urgentN?'bg-red-500':'bg-amber-400'):'')}
+  <div class="flex-1 p-5 flex flex-col gap-3.5 safe-b">
+    ${list.length?list.map(card).join(''):`<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 text-center"><div class="w-12 h-12 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center text-xl mx-auto mb-3">${ic('bell')}</div>
+      <div class="text-lg font-black text-white">신고 대기 중</div><p class="text-sm text-slate-400 mt-1">신고가 들어오면 화면이 깜박이고 진동이 울려요. 화면을 켠 채로 두세요.</p></div>`}${foot}
+  </div></div>`;
 },
 
 S2(p){
@@ -335,63 +375,84 @@ S2(p){
   const b=r.bandId?getBand(r.bandId):null, reg=b&&b.registered;
   const urgent=r.consciousness==='없음';
   const guide=reg&&r.consciousness==='있음'?b.conditions.filter(c=>GUIDE[c]):[];
-  return `<div class="wrap">${brand('STAFF 출동')}
-  <div class="row" style="align-items:center">${badge(r)}<b style="font-size:17px">${urgent?'AED 들고 출동 → 도착 즉시 AED 준비':'AED 들고 출동'}</b></div>
-  ${r.trauma==='있음'?'<div class="warn">구급상자 챙기기</div>':''}
-  <div class="card"><span class="small num">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과</span>
-    <div class="big">${esc(r.locationLabel)}</div>
-    <p>의식: <b>${esc(r.consciousness||'모름')}</b> · 외상: <b>${esc(r.trauma||'모름')}</b></p></div>
-  <div class="card line">${reg?`<b>등록 정보: 지병 ${esc(b.conditions.join(', ')||'없음')}</b>
-      ${medsText(b)?`<p style="color:var(--red);font-weight:800">가지고 있는 약: ${esc(medsText(b))} → 본인이 쓰도록 돕기</p>`:''}
-      <p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')} <span class="small">(사전 등록 정보 · 스태프·의료팀만 보임)</span></p>`
-    :'<b>등록 정보 없음</b>'}
-    ${r.verifyResult?`<span class="badge b-ok">팔찌 확인 완료 · #${esc(r.bandId)}${r.verifyResult==='변경'?' (팔찌가 달라 정보 변경)':''}</span>`:''}</div>
-  ${guide.map(c=>`<div class="card"><b>${GUIDE[c][0]}</b><ul class="g">${GUIDE[c].slice(1).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}
-  <div class="card ${r.verifyResult?'':'line'}" style="${r.verifyResult?'':'border-color:var(--red)'}">
-    <b>${r.verifyResult?'도착·확인됨 '+clock(r.verifiedAt):'도착 후 환자 팔찌 찍어 확인'}</b>
-    ${r.verifyResult?'':'<p class="small">이 폰 카메라로 환자 팔찌의 QR을 찍으세요.</p>'}</div>
-  <button class="btn out" data-act="card" aria-expanded="${!!p.card}">${p.card?'증상별 대처 카드 접기':'증상별 대처 카드 보기'}</button>
-  ${p.card?`<div class="card line" style="gap:0;padding:0;overflow:hidden">
-    ${cardRows(r,b).map(([s,t,on])=>`<div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);${on?'background:var(--warnbg)':''}">
-      <b style="${on?'color:var(--red)':''}">${s}${on?'<br><span class="tag">이 신고</span>':''}</b><span style="${on?'font-weight:700':''}">${esc(t)}</span></div>`).join('')}
-    <div style="background:var(--red);color:var(--on-red);padding:10px 12px;font-weight:800;font-size:14px">${HOSP}</div></div>`:''}
-  <button class="btn ${urgent?'red':'out'}" data-act="sms">119 문자${r.sms119At?'<small>보냄(시연) '+clock(r.sms119At)+'</small>':''}</button>
-  <button class="btn green" data-act="close">인계 완료</button>
-  <div class="row" style="align-items:center"><span class="small">QR이 안 열리면 팔찌 번호 입력</span>
-    <input type="text" id="bandno" inputmode="numeric" maxlength="4" style="flex:1 1 90px;width:auto;min-height:40px" placeholder="0001">
-    <button class="chip" data-act="manualVerify">확인</button></div>${foot}</div>`;
+  const sent=r.sms119At?`<span class="text-xs font-semibold text-emerald-300">· 보냄(시연) ${clock(r.sms119At)}</span>`:'';
+  const ok=r.verifyResult?`<span class="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold px-2 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">${ic('circle-check')} 팔찌 확인 완료 · #${esc(r.bandId)}${r.verifyResult==='변경'?' (팔찌가 달라 정보 변경)':''}</span>`:'';
+  return `<div class="${COL}">${dhdr('STAFF 알림',badge(r),urgent?'bg-red-500':'bg-amber-400')}
+  <div class="flex-1 p-5 flex flex-col gap-3.5 safe-b">
+    ${urgent?`<div class="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-4 shadow-lg border border-red-500 flex items-center gap-2.5 font-black text-base text-white">${ic('person-running','text-xl')}<span>AED 들고 출동 → 도착 즉시 AED 준비</span></div>`
+      :`<div class="bg-slate-800 rounded-2xl p-3.5 border border-slate-700 flex items-center justify-between gap-2"><div class="flex items-center gap-2 font-bold text-base text-white"><span class="w-2 h-2 rounded-full bg-amber-400"></span>AED 들고 출동</div><span class="text-xs text-slate-400 text-right">의식 저하 대비 장비 휴대</span></div>`}
+    ${r.trauma==='있음'?`<div class="bg-amber-500/15 border border-amber-500/50 rounded-2xl p-3.5 flex items-center gap-2 font-bold text-amber-300">${ic('bandage')} 구급상자 챙기기</div>`:''}
+    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4">
+      <div class="text-xs text-slate-400 font-semibold mb-1 tabular-nums">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과 · ${src(r)}</div>
+      <div class="text-xl font-black text-white leading-tight">응급 신고 · ${esc(r.locationLabel)}</div>
+      <div class="mt-3 pt-3 border-t border-slate-700/80 flex flex-wrap items-center gap-2">${stChip('의식',r.consciousness)}${stChip('외상',r.trauma)}</div></div>
+    ${regCard(b,{urgent,help:true,extra:ok})}
+    ${guide.map(c=>`<div class="bg-amber-950/40 border border-amber-500/40 rounded-2xl p-4"><div class="text-sm font-bold text-amber-300 flex items-center gap-1.5 mb-1">${ic('circle-info')} ${esc(GUIDE[c][0])}</div>
+      ${GUIDE[c].slice(1).map(x=>x.startsWith('*')?`<p class="text-xs text-amber-400/90 mt-2 font-medium">${esc(x)}</p>`:`<p class="text-sm text-slate-200 leading-relaxed">${esc(x)}</p>`).join('')}</div>`).join('')}
+    ${urgent?`<button class="w-full min-h-[52px] bg-red-500/20 border-2 border-red-500/70 rounded-2xl text-red-300 font-black text-base flex flex-wrap items-center justify-center gap-x-2" data-act="sms">${ic('comment-sms')} 119 문자 창 열기 ${sent}</button>`
+      :`<button class="w-full min-h-[48px] bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-semibold border border-slate-700 flex flex-wrap items-center justify-center gap-x-1.5" data-act="sms">${ic('comment-dots')} 119 문자 (필요 시) ${sent}</button>`}
+    <div class="${r.verifyResult?'bg-emerald-500/15 border-2 border-emerald-500/70':'bg-emerald-600/10 border-2 border-dashed border-emerald-500/60'} rounded-2xl p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">${ic(r.verifyResult?'circle-check':'id-badge')}</div>
+      <div class="min-w-0"><p class="font-bold text-white">${r.verifyResult?'도착·확인됨 '+clock(r.verifiedAt):'도착 후 환자 팔찌 찍어 확인'}</p>${r.verifyResult?'':'<p class="text-xs text-slate-400 mt-0.5">이 폰 카메라로 환자 팔찌의 QR을 찍으세요.</p>'}</div></div>
+    <button class="w-full min-h-[48px] bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-sm font-bold text-slate-200 flex items-center justify-center gap-2" data-act="card" aria-expanded="${!!p.card}">${ic('notes-medical')} ${p.card?'증상별 대처 카드 접기':'증상별 대처 카드 보기'} ${ic(p.card?'chevron-up':'chevron-down','text-xs')}</button>
+    ${p.card?`<div class="rounded-2xl border border-slate-700 overflow-hidden">
+      ${cardRows(r,b).map(([s,t,on])=>`<div class="grid grid-cols-[88px_1fr] gap-3 px-3.5 py-3 border-b border-slate-700/80 ${on?'bg-red-500/15':'bg-slate-800/60'}">
+        <b class="text-sm ${on?'text-red-300':'text-slate-200'}">${s}${on?'<br><span class="inline-block mt-1 text-[11px] font-bold px-1.5 py-0.5 rounded bg-red-600 text-white">이 신고</span>':''}</b><span class="text-sm ${on?'font-bold text-white':'text-slate-300'}">${esc(t)}</span></div>`).join('')}
+      <div class="bg-red-600 text-white px-3.5 py-3 font-bold text-sm">${HOSP}</div></div>`:''}
+    <button class="w-full min-h-[56px] bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold text-base rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40" data-act="close">${ic('handshake')} 인계 완료</button>
+    <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-3.5"><p class="text-xs text-slate-400 mb-2">QR이 안 열리면 팔찌 번호 입력</p>
+      <div class="flex gap-2"><input type="text" id="bandno" inputmode="numeric" maxlength="4" placeholder="0001" aria-label="팔찌 번호" class="flex-1 min-w-0 h-12 px-4 rounded-xl border border-slate-600 bg-slate-900 text-white text-base font-semibold tabular-nums outline-none focus:border-emerald-500 placeholder:text-slate-500">
+      <button class="shrink-0 h-12 px-5 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 font-bold text-white" data-act="manualVerify">확인</button></div></div>${foot}
+  </div></div>`;
 },
 
 S3(p){
-  if(p.none) return `<div class="wrap">${brand('STAFF 팔찌 확인')}<h1>진행 중인 신고가 없습니다</h1><button class="btn out" data-act="toS1">알림 화면으로</button>${foot}</div>`;
+  if(p.none) return `<div class="${COL}">${dhdr('STAFF 팔찌 확인')}<div class="flex-1 p-5 flex flex-col gap-4 safe-b">
+    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 text-center text-lg font-black text-white">진행 중인 신고가 없습니다</div>
+    <button class="w-full min-h-[52px] bg-slate-800 border border-slate-700 rounded-xl font-bold text-white" data-act="toS1">알림 화면으로</button>${foot}</div></div>`;
   const r=S.reports[p.id]; if(!r) return SCREENS.S1();
   const b=getBand(r.bandId);
   const msg=p.result==='일치'?'신고된 사람이 맞습니다':(p.wasPlace?'이 팔찌의 등록 정보를 연결했습니다':'신고된 팔찌와 다릅니다.<br>이 팔찌의 등록 정보로 바꿨습니다');
-  return `<div class="wrap">${brand('STAFF 팔찌 확인')}
-  <div class="card" style="border:2px solid var(--green)"><span class="badge b-ok">팔찌 #${esc(r.bandId)}</span><div class="big">${msg}</div></div>
-  <div class="card line">${b.registered?`<b>등록 정보: 지병 ${esc(b.conditions.join(', ')||'없음')}</b>${medsText(b)?`<p style="color:var(--red);font-weight:800">가지고 있는 약: ${esc(medsText(b))}</p>`:''}<p>이름: ${esc(b.name||'—')} / 연락처: ${esc(b.phone||'—')}</p>`:'<b>등록 정보 없음 (미등록 팔찌)</b>'}</div>
-  <button class="btn red" data-act="toS2" data-arg="${r.id}">출동 화면으로</button>${foot}</div>`;
+  return `<div class="${COL}">${dhdr('STAFF 팔찌 확인',`<span class="shrink-0 text-xs font-black px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950">팔찌 #${esc(r.bandId)}</span>`,'bg-emerald-400')}
+  <div class="flex-1 p-5 flex flex-col gap-3.5 safe-b">
+    <div class="bg-emerald-500/15 border-2 border-emerald-500/70 rounded-2xl p-5 text-center">
+      <div class="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl mx-auto mb-3">${ic(p.result==='일치'?'circle-check':'arrows-rotate')}</div>
+      <div class="text-xl font-black text-white leading-snug">${msg}</div>
+      <p class="text-xs text-emerald-300 mt-2">팔찌 QR 인식 완료 · ${esc(r.locationLabel)}</p></div>
+    ${regCard(b,{urgent:r.consciousness==='없음',none:'등록 정보 없음 (미등록 팔찌)'})}
+    <button class="${BTN_RED}" data-act="toS2" data-arg="${r.id}">${ic('arrow-left')} 출동 화면으로</button>${foot}
+  </div></div>`;
 },
 
 // ---------- 모니터 ----------
 M1(){
   const all=allReports(), n=all.filter(isOpen).length, now=Date.now();
+  const TD='px-3 py-3.5 border-b border-slate-700/70 align-top';
   const row=r=>{ const b=r.bandId?getBand(r.bandId):null; const end=r.verifiedAt||r.closedAt||r.cancelledAt;
     return `<tr class="${isOpen(r)?(now-r.createdAt<6000?'new':''):'done'}">
-      <td class="num">${clock(r.createdAt)}</td><td><b>${esc(r.locationLabel)}</b></td>
-      <td>의식 ${esc(r.consciousness||'모름')}<br>외상 ${esc(r.trauma||'모름')}</td>
-      <td>${b&&b.registered?esc(b.name||'—')+'<br><span class="small">'+esc(b.conditions.join(', ')||'지병 없음')+(medsText(b)?' · 약: '+esc(medsText(b)):'')+'</span>':'<span class="small">등록 정보 없음</span>'}</td>
-      <td>${badge(r)} <b>${STATUS[r.status]}</b>${r.sms119At?'<br><span class="tag">119 문자(시연)</span>':''}</td>
-      <td class="num" data-since="${r.createdAt}" data-stop="${end||''}">${fmt((end||now)-r.createdAt)}</td></tr>`; };
-  return `<div class="wrap wide">${brand('응급처치실 모니터','<span class="small">스태프·의료팀 화면</span>')}
-  <div class="row" style="align-items:baseline;gap:12px"><h1>진행 중</h1><span class="count">${n}건</span></div>
-  ${all.length?`<div class="tbl"><table><thead><tr><th>접수</th><th>위치</th><th>의식·외상</th><th>등록 정보</th><th>상태</th><th>경과</th></tr></thead><tbody>${all.map(row).join('')}</tbody></table></div>`
-    :'<div class="card"><div class="big">신고 없음</div><p class="small">관객이 팔찌 QR로 신고하면 여기에 바로 뜹니다.</p></div>'}${foot}</div>`;
+      <td class="${TD} tabular-nums text-slate-300">${clock(r.createdAt)}</td>
+      <td class="${TD}"><b class="text-white">${esc(r.locationLabel)}</b><div class="text-xs text-slate-400 mt-0.5">${src(r)}</div></td>
+      <td class="${TD}"><div class="flex flex-col items-start gap-1">${stChip('의식',r.consciousness)}${stChip('외상',r.trauma)}</div></td>
+      <td class="${TD}">${b&&b.registered?'<b class="text-white">'+esc(b.name||'—')+'</b><div class="text-sm text-amber-300 mt-0.5">'+esc(b.conditions.join(', ')||'지병 없음')+'</div>'+(medsText(b)?'<div class="text-sm text-rose-300">'+ic('capsules')+' 약: '+esc(medsText(b))+'</div>':''):'<span class="text-sm text-slate-400">등록 정보 없음</span>'}</td>
+      <td class="${TD}"><div class="flex flex-wrap items-center gap-1.5">${badge(r)}<b class="text-white">${STATUS[r.status]}</b></div>${r.sms119At?'<span class="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">119 문자(시연)</span>':''}</td>
+      <td class="${TD} tabular-nums font-bold text-white" data-since="${r.createdAt}" data-stop="${end||''}">${fmt((end||now)-r.createdAt)}</td></tr>`; };
+  return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${dhdr('응급처치실 모니터','<span class="shrink-0 text-xs font-semibold text-slate-400">스태프·의료팀 화면</span>',n?'bg-red-500':'')}
+  <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
+    <div class="flex items-baseline gap-3"><h1 class="text-2xl sm:text-3xl font-extrabold text-white">진행 중</h1><span class="text-4xl font-black tabular-nums ${n?'text-red-400':'text-slate-500'}">${n}건</span></div>
+    ${all.length?`<div class="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-800/60"><table class="w-full min-w-[680px] border-collapse text-base">
+      <thead><tr>${['접수','위치','의식·외상','등록 정보','상태','경과'].map(h=>`<th class="text-left text-xs font-semibold text-slate-400 px-3 py-2.5 border-b border-slate-700 bg-slate-900/60">${h}</th>`).join('')}</tr></thead>
+      <tbody>${all.map(row).join('')}</tbody></table></div>`
+    :'<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 text-center"><div class="text-xl font-black text-white">신고 없음</div><p class="text-sm text-slate-400 mt-1">관객이 팔찌 QR로 신고하면 여기에 바로 뜹니다.</p></div>'}${foot}
+  </div></div>`;
 },
 
-RESET(p){ return `<div class="wrap">${brand('발표자')}<h1>시연 데이터를 처음 상태로 되돌립니다</h1>
-  <p class="sub">신고를 모두 지우고, 팔찌 0001은 미등록, 0002는 예시 등록 상태로 돌립니다. 이 기기의 스태프 기억도 지웁니다.</p>
-  <button class="btn red" data-act="reset">${p.confirm?'한 번 더 누르면 초기화돼요':'초기화'}</button>${foot}</div>`; }
+RESET(p){ return `<div class="${COL}">${lhdr('발표자',pill('초기화','text-slate-500 bg-slate-100'))}
+  <div class="flex-1 p-6 flex flex-col gap-5 safe-b">
+    <div class="text-center mt-4"><div class="w-16 h-16 rounded-full bg-red-50 border-2 border-red-200 text-brand mx-auto flex items-center justify-center text-2xl mb-3">${ic('rotate-left')}</div>
+      <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">시연 데이터를 처음 상태로 되돌립니다</h1>
+      <p class="text-sm text-slate-600 mt-2 leading-relaxed">신고를 모두 지우고, 팔찌 0001은 미등록, 0002는 예시 등록 상태로 돌립니다. 이 기기의 스태프 기억도 지웁니다.</p></div>
+    <button class="${BTN_RED}" data-act="reset">${p.confirm?'한 번 더 누르면 초기화돼요':'초기화'}</button>${foot}
+  </div></div>`; }
 };
 
 // ===== 그리기 =====
@@ -399,24 +460,32 @@ function render(){
   document.body.classList.toggle('dark',DARK.has(V.s));
   $('app').innerHTML=SCREENS[V.s](V.p);
   $('modal').innerHTML=V.p.sms?smsModal(S.reports[V.p.id]):'';
-  document.querySelectorAll('[data-qr]').forEach(el=>{ try{ new QRCode(el,{text:el.dataset.qr,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.textContent=el.dataset.qr; el.className='small'; } });
+  document.querySelectorAll('[data-qr]').forEach(el=>{ try{ new QRCode(el,{text:el.dataset.qr,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.textContent=el.dataset.qr; el.className='text-xs text-slate-500 break-all'; } });
   tick();
 }
 function smsModal(r){
   if(!r) return '';
   const b=r.bandId?getBand(r.bandId):null, reg=b&&b.registered;
   const body=`[응급] STARLIGHT 공연장 ${r.locationLabel}\n주소: OO시 OO로 00 / 가까운 건물: OO역\n의식 ${r.consciousness||'모름'} · 외상 ${r.trauma||'모름'}\n지병: ${reg?(b.conditions.join(', ')||'없음'):'등록 없음'}\n${reg&&medsText(b)?'소지 약: '+medsText(b)+'\n':''}연락처: ${reg&&b.phone?b.phone:'등록 없음'}`;
-  return `<div class="modal"><div class="in"><div class="box">
-    <div class="row" style="justify-content:space-between"><b style="font-size:19px">119 문자 신고</b><span class="small">확인 후 보내기</span></div>
-    <div class="warn" style="font-size:15px">통화가 가능하면 119 전화가 우선입니다</div>
-    <pre class="msg">${esc(body)}</pre>
-    ${r.sms119At?'<div class="btn green">시연용: 실제로 보내지 않았습니다</div>':'<button class="btn red" data-act="sendSms">보내기</button>'}
-    <button class="btn out" data-act="closeSms">닫기</button></div></div></div>`;
+  return `<div class="fixed inset-0 z-20 bg-black/60 backdrop-blur-[2px] flex items-end" role="dialog" aria-modal="true" aria-label="119 문자 신고">
+  <div class="w-full max-w-[480px] mx-auto bg-white text-slate-900 rounded-t-[32px] p-5 shadow-2xl max-h-[92dvh] overflow-y-auto safe-b">
+    <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-3"></div>
+    <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">${ic('comment-sms')}</span><h2 class="text-lg font-extrabold">119 문자 신고</h2></div>
+      <span class="shrink-0 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">확인 후 보내기</span></div>
+    <button class="w-full min-h-[52px] bg-brand hover:bg-[#b00d27] active:scale-[0.98] text-white font-extrabold text-base rounded-xl shadow-md flex items-center justify-center gap-2 mb-3" data-act="call119">${ic('phone')} 119 전화하기 (통화 우선)</button>
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-3">
+      <div class="flex items-center justify-between gap-2 mb-1.5"><span class="text-xs font-bold text-slate-700 flex items-center gap-1">${ic('envelope-open-text','text-slate-400')} 신고 메시지 본문</span><span class="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">자동 입력됨</span></div>
+      <pre class="whitespace-pre-wrap break-words text-sm text-slate-800 leading-relaxed bg-white p-3 rounded-lg border border-slate-200 select-all m-0" style="font-family:inherit">${esc(body)}</pre>
+      ${r.consciousness==='없음'?`<p class="text-xs text-red-600 font-medium mt-1.5 flex items-center gap-1">${ic('triangle-exclamation','text-[10px]')} 의식 없음 신고 시 자동으로 열립니다</p>`:''}</div>
+    <div class="space-y-2">${r.sms119At?`<div class="w-full min-h-[52px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 px-3 text-center">${ic('circle-check')} 시연용: 실제로 보내지 않았습니다 · ${clock(r.sms119At)}</div>`
+      :`<button class="w-full min-h-[52px] bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-extrabold text-base rounded-xl shadow-md flex items-center justify-center gap-1.5" data-act="sendSms">${ic('paper-plane','text-sm')} 보내기</button>`}
+      <button class="w-full min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl" data-act="closeSms">닫기</button></div>
+  </div></div>`;
 }
 function tick(){
   const now=Date.now();
   document.querySelectorAll('[data-since]').forEach(el=>{ const stop=+el.dataset.stop||0; el.textContent=fmt((stop||now)-(+el.dataset.since)); });
-  document.querySelectorAll('[data-until]').forEach(el=>{ const left=+el.dataset.until-now; if(left<=0) el.remove(); else el.firstChild.textContent=`실수로 눌렀어요 (${Math.ceil(left/1000)}초 안에 취소)`; });
+  document.querySelectorAll('[data-until]').forEach(el=>{ const left=+el.dataset.until-now; if(left<=0) el.remove(); else (el.querySelector('[data-cd]')||el).textContent=`실수로 눌렀어요 (${Math.ceil(left/1000)}초 안에 취소)`; });
 }
 let sec=0; setInterval(()=>{ tick(); if(V.s==='M1'&&++sec%3===0) render(); },1000);
 
@@ -458,14 +527,15 @@ async function staffVerify(bandId){
 
 // ===== 버튼 =====
 const ACT = {
-  startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),meds:(b.meds||[]).slice(),medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
-  fmed(m){ const a=V.p.f.meds, i=a.indexOf(m); i<0?a.push(m):a.splice(i,1); render(); },
+  startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
+  backA1(){ go('A1',{band:V.p.band}); },
+  call119(){ toast('시연용: 실제로 전화가 걸리지 않습니다'); },
   toReport(){ openReportFor({band:V.p.band}); },
   fzone(z){ V.p.f.zoneId=z; render(); },
   fcond(c){ const a=V.p.f.conditions, i=a.indexOf(c); i<0?a.push(c):a.splice(i,1); render(); },
-  async save(){ const F=V.p.f;
-    if((F.conditions.length||F.meds.length)&&!F.consent) return toast('지병·가지고 있는 약을 저장하려면 동의가 필요해요');
-    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],meds:F.consent?F.meds:[],medsWhere:F.consent&&F.meds.length?F.medsWhere.trim():'',consent:F.consent,registeredAt:Date.now()});
+  async save(){ const F=V.p.f, mt=F.medsText.trim();
+    if((F.conditions.length||mt)&&!F.consent) return toast('지병·가지고 있는 약을 저장하려면 동의가 필요해요');
+    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],medsText:F.consent?mt:'',medsWhere:F.consent&&mt?F.medsWhere.trim():'',consent:F.consent,registeredAt:Date.now()});
     go('A2',{band:V.p.band,done:true}); },
   pzone(z){ V.p.zone=z; V.p.pos=null; render(); },
   ppos(x){ V.p.pos=V.p.pos===x?null:x; render(); },
@@ -512,7 +582,7 @@ function route(){
   if(h.startsWith('band-')&&BANDS.includes(h.slice(5))){
     const id=h.slice(5);
     if(isStaff()){ if(S.ready) return staffVerify(id); pendingBand=id; return go('S1'); }
-    if(!S.ready){ V={s:'WAIT',p:{band:id}}; $('app').innerHTML='<div class="wrap"><p>불러오는 중…</p></div>'; return; }
+    if(!S.ready){ V={s:'WAIT',p:{band:id}}; $('app').innerHTML=loading; return; }
     return getBand(id).registered ? openReportFor({band:id}) : go('A1',{band:id});
   }
   if(h.startsWith('qr-')&&ZONES[h.slice(3)]) return S.ready?openReportFor({place:h.slice(3)}):(V={s:'WAIT',p:{place:h.slice(3)}});
