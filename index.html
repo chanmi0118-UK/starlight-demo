@@ -442,7 +442,8 @@ M1(){
     ${all.length?`<div class="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-800/60"><table class="w-full min-w-[680px] border-collapse text-base">
       <thead><tr>${['접수','위치','의식·외상','등록 정보','상태','경과'].map(h=>`<th class="text-left text-xs font-semibold text-slate-400 px-3 py-2.5 border-b border-slate-700 bg-slate-900/60">${h}</th>`).join('')}</tr></thead>
       <tbody>${all.map(row).join('')}</tbody></table></div>`
-    :'<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 text-center"><div class="text-xl font-black text-white">신고 없음</div><p class="text-sm text-slate-400 mt-1">관객이 팔찌 QR로 신고하면 여기에 바로 뜹니다.</p></div>'}${foot}
+    :'<div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 text-center"><div class="text-xl font-black text-white">신고 없음</div><p class="text-sm text-slate-400 mt-1">관객이 팔찌 QR로 신고하면 여기에 바로 뜹니다.</p></div>'}
+    <button class="self-center text-sm text-slate-400 underline underline-offset-4 py-2 px-4" data-act="toHome">QR 화면으로 돌아가기</button>${foot}
   </div></div>`;
 },
 
@@ -560,6 +561,7 @@ const ACT = {
   async close(){ const r=S.reports[V.p.id]; await patch(r.id,{status:'closed',closedAt:Date.now(),outcome:r.sms119At?'119 인계':'응급처치실 인계'}); dset('active',null); go('S1'); },
   manualVerify(){ const v=($('bandno').value||'').trim().padStart(4,'0'); if(!BANDS.includes(v)) return toast('팔찌 번호를 찾지 못했어요'); staffVerify(v); },
   toMonitor(){ location.hash='monitor'; route(); },
+  toHome(){ dset('role',null); location.hash='home'; route(); },
   toS1(){ go('S1'); },
   toS2(id){ go('S2',{id}); },
   async reset(){ if(!V.p.confirm){ V.p.confirm=true; return render(); }
@@ -579,6 +581,7 @@ function route(){
   if(h==='staff'){ dset('role','staff'); known=null; return go('S1'); }
   if(h==='monitor'){ dset('role','monitor'); return go('M1'); }
   if(h==='reset') return go('RESET');
+  if(h==='home'){ dset('role',null); return go('HOME'); }
   if(h.startsWith('band-')&&BANDS.includes(h.slice(5))){
     const id=h.slice(5);
     if(isStaff()){ if(S.ready) return staffVerify(id); pendingBand=id; return go('S1'); }
