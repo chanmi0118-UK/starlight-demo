@@ -399,12 +399,12 @@ A3(p){
 
 A4(p){
   const r=S.reports[p.id]; if(!r) return loading;
-  if(p.closed&&r.status!=='cancelled') return `<div class="${COL}">${lhdr('응급 신고',pill('접수 완료','text-emerald-700 bg-emerald-50'))}
+  if((p.closed||Date.now()-r.createdAt>10000)&&r.status!=='cancelled') return `<div class="${COL}">${lhdr('응급 신고',pill('접수 완료','text-emerald-700 bg-emerald-50'))}
     <div class="flex-1 p-6 flex flex-col items-center justify-center text-center gap-4 safe-b">
       <div class="w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-500/30 text-emerald-600 flex items-center justify-center text-3xl">${ic('check')}</div>
       <h1 class="text-2xl font-extrabold text-slate-900 leading-snug">신고가 전달됐어요</h1>
       <p class="text-base text-slate-600 leading-relaxed">스태프가 가고 있어요.<br>환자 곁에서 자리를 지켜 주세요.</p>
-      <p class="text-sm text-slate-400">이 화면은 닫아도 돼요.</p>
+      <button class="mt-2 w-full max-w-xs min-h-[52px] rounded-2xl bg-slate-900 text-white font-bold" data-act="closeTab">${ic('xmark')} 화면 닫기</button>
       <p class="text-xs text-slate-400 mt-2">상태가 나빠지면(의식·호흡이 없으면) 바로 119에 전화하세요.</p>${foot}</div></div>`;
   const prog={received:'스태프에게 알림이 갔어요',dispatched:'스태프가 출동했어요',verified:'스태프가 도착했어요',closed:'인계가 끝났어요',cancelled:'신고를 취소했어요'}[r.status];
   const open=isOpen(r), cancelled=r.status==='cancelled', urgent=r.consciousness==='없음'&&open;
@@ -651,7 +651,7 @@ function tick(){
   document.querySelectorAll('[data-until]').forEach(el=>{ const left=+el.dataset.until-now; if(left<=0) el.remove(); else (el.querySelector('[data-cd]')||el).textContent=`실수로 눌렀어요 (${Math.ceil(left/1000)}초 안에 취소)`; });
 }
 let sec=0; setInterval(()=>{ tick(); if(V.s==='M1'&&++sec%3===0) render();
-  if(V.s==='A4'&&!V.p.closed){ const r=S.reports[V.p.id]; if(r&&Date.now()-r.createdAt>10000){ V.p.closed=true; render(); } } // 취소 시간이 지나면 신고 화면을 닫음
+  if(V.s==='A4'&&!V.p.closed){ const r=S.reports[V.p.id]; if(r&&Date.now()-r.createdAt>10000){ V.p.closed=true; render(); try{ navigator.vibrate&&navigator.vibrate(150); }catch(e){} } } // 취소 시간이 지나면 신고 화면을 닫음
 },1000);
 
 // ===== 스태프 알림·자동 동작 =====
@@ -726,6 +726,7 @@ const ACT = {
       acceptedAt:null,verifiedAt:null,closedAt:null,cancelledAt:null,verifyResult:null,sms119At:null,outcome:null};
     p.sending=true; render();
     try{ await addReport(r); go(r.consciousness==='없음'?'A5':'A4',{id:r.id}); }catch(e){ p.sending=false; render(); } },
+  closeTab(){ try{ window.close(); }catch(e){} setTimeout(()=>{ document.body.innerHTML='<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;font:600 16px sans-serif;color:#64748b;text-align:center;padding:24px">신고가 전달됐어요.<br>이제 브라우저 탭을 닫아 주세요.</div>'; },300); },
   apick(a){ const [f,v]=a.split('|'); V.p[f]=V.p[f]===v?null:v; render(); },
   async cancel(){ const r=S.reports[V.p.id]; if(!r||r.status!=='received'||Date.now()-r.createdAt>10000) return; await patch(r.id,{status:'cancelled',cancelledAt:Date.now()}); },
   async pick(a){ const [f,v]=a.split('|'); const r=S.reports[V.p.id]; if(!r) return; const nv=r[f]===v?null:v;
