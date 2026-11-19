@@ -338,8 +338,8 @@ A2(p){
           ${b.phone?`<div class="mt-4 text-left bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
             <div class="flex items-center justify-between gap-2 mb-1"><span class="text-xs font-bold text-slate-700 flex items-center gap-1">${ic('comment-sms','text-blue-600')} 문자 · ${esc(b.phone)}</span><span class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">시연: 실제 발송 안 함</span></div>
             <p class="text-sm text-slate-800 leading-relaxed">[STARLIGHT LIVE] 다음 회차 불러오기 코드 <b class="tabular-nums">${esc(b.recallCode)}</b>. 새 팔찌를 찍고 「코드 입력」에 넣으세요. 공연 기간 종료 후 24시간 안 파기.</p>
-            <a class="mt-3 w-full min-h-[48px] rounded-xl bg-blue-600 text-white font-bold text-sm flex items-center justify-center gap-2" href="${smsHref(b.phone,'[STARLIGHT LIVE] 다음 회차 불러오기 코드 '+b.recallCode+'. 새 팔찌를 찍고 「코드 입력」에 넣으세요.')}">${ic('paper-plane')} 이 번호로 코드 문자 보내기</a>
-            <p class="text-[11px] text-slate-400 mt-1.5 text-center">폰의 문자 앱이 열리고 코드가 채워져 있어요. 보내기를 누르면 실제로 전송돼요.</p></div>`
+            ${b.codeSentAt?`<div class="mt-3 w-full min-h-[44px] rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold text-sm flex items-center justify-center gap-1.5">${ic('circle-check')} 문자 보냄 ${clock(b.codeSentAt)} (시연)</div>`
+              :`<button class="mt-3 w-full min-h-[48px] rounded-xl bg-blue-600 text-white font-bold text-sm flex items-center justify-center gap-2" data-act="codeSms">${ic('paper-plane')} 이 번호로 코드 문자 보내기</button>`}</div>`
           :`<p class="mt-3 text-xs text-amber-700 font-semibold">연락처를 넣지 않아 문자로 보내지 못했어요. 코드를 적어 두세요.</p>`}</div>`
         :`<div class="mt-4 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
           <div><p class="text-sm font-bold text-slate-800">다른 회차도 관람하나요?</p><p class="text-xs text-slate-500 mt-0.5">정보 보관에 동의하면 6자리 불러오기 코드를 드려요</p></div>
@@ -632,9 +632,22 @@ function render(){
   $('app').innerHTML=SCREENS[V.s](V.p);
   keep.forEach(([id,v])=>{ const e=$(id); if(e&&!e.value) e.value=v; }); // 다른 폰 데이터로 다시 그려도 입력 중인 번호·코드 유지
   if(foc){ const e=$(foc); e&&e.focus&&e.focus(); }
-  $('modal').innerHTML=V.p.sms?smsModal(S.reports[V.p.id]):'';
+  $('modal').innerHTML=V.p.sms?smsModal(S.reports[V.p.id]):V.p.codeSms?codeModal(getBand(V.p.band)):'';
   document.querySelectorAll('[data-qr]').forEach(el=>{ try{ new QRCode(el,{text:el.dataset.qr,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.textContent=el.dataset.qr; el.className='text-xs text-slate-500 break-all'; } });
   tick();
+}
+function codeModal(b){ // 불러오기 코드 문자 (시연: 실제로 보내지 않음)
+  const body=`[STARLIGHT LIVE] 다음 회차 불러오기 코드 ${b.recallCode}. 새 팔찌를 찍고 「코드 입력」에 넣으세요. 공연 기간 종료 후 24시간 안 파기.`;
+  return `<div class="fixed inset-0 z-20 bg-black/60 backdrop-blur-[2px] flex items-end" role="dialog" aria-modal="true" aria-label="코드 문자 보내기">
+  <div class="w-full max-w-[480px] mx-auto bg-white text-slate-900 rounded-t-[32px] p-5 shadow-2xl max-h-[92dvh] overflow-y-auto safe-b">
+    <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-3"></div>
+    <div class="flex items-center gap-2 pb-3 mb-3 border-b border-slate-100"><span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">${ic('comment-sms')}</span><h2 class="text-lg font-extrabold">새 메시지</h2></div>
+    <div class="text-sm mb-2"><span class="text-slate-500">받는 사람</span> <b class="ml-1">${esc(b.phone)}</b></div>
+    <div class="bg-blue-600 text-white text-sm leading-relaxed rounded-2xl rounded-br-md p-3 ml-8 mb-4">${esc(body)}</div>
+    <div class="space-y-2"><button class="w-full min-h-[52px] bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-extrabold text-base rounded-xl shadow-md flex items-center justify-center gap-1.5" data-act="sendCode">${ic('paper-plane','text-sm')} 보내기</button>
+      <p class="text-xs text-slate-400 text-center">시연용: 실제로 보내지 않아요</p>
+      <button class="w-full min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl" data-act="closeCode">닫기</button></div>
+  </div></div>`;
 }
 function smsModal(r){
   if(!r) return '';
@@ -734,6 +747,9 @@ const ACT = {
     p.sending=true; render();
     try{ await addReport(r); go(r.consciousness==='없음'?'A5':'A4',{id:r.id}); }catch(e){ p.sending=false; render(); } },
   closeTab(){ try{ window.close(); }catch(e){} setTimeout(()=>{ document.body.innerHTML='<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;font:600 16px sans-serif;color:#64748b;text-align:center;padding:24px">신고가 전달됐어요.<br>이제 브라우저 탭을 닫아 주세요.</div>'; },300); },
+  codeSms(){ V.p.codeSms=true; render(); },
+  closeCode(){ V.p.codeSms=false; render(); },
+  async sendCode(){ await saveBand(V.p.band,{codeSentAt:Date.now()}); V.p.codeSms=false; render(); toast('코드 문자를 보냈어요 (시연)'); },
   apick(a){ const [f,v]=a.split('|'); V.p[f]=V.p[f]===v?null:v; render(); },
   async cancel(){ const r=S.reports[V.p.id]; if(!r||r.status!=='received'||Date.now()-r.createdAt>10000) return; await patch(r.id,{status:'cancelled',cancelledAt:Date.now()}); },
   async pick(a){ const [f,v]=a.split('|'); const r=S.reports[V.p.id]; if(!r) return; const nv=r[f]===v?null:v;
