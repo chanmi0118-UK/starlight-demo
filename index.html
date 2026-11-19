@@ -71,8 +71,8 @@ const SHORT = {'STAND-A':'스탠딩 A','STAND-B':'스탠딩 B','STAND-C':'스탠
 const CONDS = ['심장 질환','당뇨','천식','뇌전증','알레르기','기타'];
 // 가지고 있는 약: 자유 입력(medsText) + 둔 곳(medsWhere)
 const medsText = b => b.medsText ? b.medsText+(b.medsWhere?' ('+b.medsWhere+')':'') : '';
-const BANDS = ['0001','0002'];
-const SEED = { // 예시 2개: 0001은 발표 때 직접 등록, 0002는 미리 등록된 예시
+const BANDS = ['0001','0002','0003'];
+const SEED = { // 0001은 발표 때 직접 등록, 0002는 미리 등록된 예시, 0003은 다음 날 받은 새 팔찌(불러오기 코드 시연)
   '0001':{registered:false},
   '0002':{registered:true,name:'김민준',phone:'010-0000-0000',zoneId:'SEAT-2F',seatDetail:'B구역 5열 12번',conditions:['심장 질환'],consent:true,keepConsent:true,recallCode:'482915'} // 지난 회차에 보관 동의한 예시
 };
@@ -272,7 +272,7 @@ const loading = '<div class="p-8 text-center text-slate-500">불러오는 중…
 
 const SCREENS = {
 HOME(){
-  const cards=[['band-0001','팔찌 #0001','관객 폰 · 처음엔 등록, 다시 찍으면 신고'],['band-0002','팔찌 #0002','예시 등록 팔찌 · 스태프 폰으로 찍으면 환자 확인'],
+  const cards=[['band-0001','팔찌 #0001','관객 폰 · 처음엔 등록, 다시 찍으면 신고'],['band-0002','팔찌 #0002','예시 등록 팔찌 · 스태프 폰으로 찍으면 환자 확인'],['band-0003','팔찌 #0003','다음 날 받은 새 팔찌 · 불러오기 코드로 정보 연결'],
     ['qr-STAND-C','스탠딩 C구역 펜스','관객 폰 · 구역 자동 신고'],['staff','STAFF 전용','스태프 폰으로 찍기']];
   return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${lhdr('응급 팔찌 시연',pill('QR 허브','text-brand bg-red-50'))}
   <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
@@ -330,7 +330,7 @@ A2(p){
           <p class="text-xs font-bold text-brand mb-2">불러오기 코드</p>
           <p class="text-3xl font-black tracking-[0.3em] text-slate-900 tabular-nums">${esc(b.recallCode.slice(0,3))} ${esc(b.recallCode.slice(3))}</p>
           <p class="text-xs text-slate-500 mt-2">다음 회차에 이 코드를 넣으면 다시 입력하지 않아도 돼요.<br>코드를 잃어버리면 문자 인증으로 불러올 수 있어요 (시연에서는 만들지 않음)</p>
-          <button class="mt-4 w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="nextShow">${ic('forward')} 시연: 다음 회차 새 팔찌로 코드 넣어 보기</button></div>`
+          ${p.band!=='0003'?`<button class="mt-4 w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="nextShow">${ic('forward')} 시연: 다음 날 새 팔찌(#0003)로 코드 넣어 보기</button>`:''}</div>`
         :`<div class="mt-4 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
           <div><p class="text-sm font-bold text-slate-800">다른 회차도 관람하나요?</p><p class="text-xs text-slate-500 mt-0.5">정보 보관에 동의하면 6자리 불러오기 코드를 드려요</p></div>
           <button class="w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="keep">보관에 동의하고 코드 받기</button></div>`}
@@ -560,7 +560,7 @@ RESET(p){ return `<div class="${COL}">${lhdr('발표자',pill('초기화','text-
   <div class="flex-1 p-6 flex flex-col gap-5 safe-b">
     <div class="text-center mt-4"><div class="w-16 h-16 rounded-full bg-red-50 border-2 border-red-200 text-brand mx-auto flex items-center justify-center text-2xl mb-3">${ic('rotate-left')}</div>
       <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">시연 데이터를 처음 상태로 되돌립니다</h1>
-      <p class="text-sm text-slate-600 mt-2 leading-relaxed">신고를 모두 지우고, 팔찌 0001은 미등록, 0002는 예시 등록 상태로 돌립니다. 이 기기의 스태프 기억도 지웁니다.</p></div>
+      <p class="text-sm text-slate-600 mt-2 leading-relaxed">신고를 모두 지우고, 팔찌 0001·0003은 미등록, 0002는 예시 등록 상태로 돌립니다. 이 기기의 스태프 기억도 지웁니다.</p></div>
     <button class="${BTN_RED}" data-act="reset">${p.confirm?'한 번 더 누르면 초기화돼요':'초기화'}</button>${foot}
   </div></div>`; }
 };
@@ -695,11 +695,9 @@ const ACT = {
     const b=src[1];
     go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:null,seatDetail:'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}});
     toast('정보를 불러왔어요. 오늘 좌석만 골라 주세요'); },
-  async nextShow(){ // 지난 회차 정보는 보관본으로 두고, 이 팔찌를 새 팔찌(미등록)처럼 비운 뒤 코드 입력 화면으로
-    const id=V.p.band, b=getBand(id);
-    await saveBand('prev-'+b.recallCode,Object.assign({},b,{archived:true}));
-    await saveBand(id,{registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],medsText:'',medsWhere:'',consent:false,keepConsent:false,recallCode:'',minor:false,guardian:false});
-    go('A1',{band:id,recall:true}); toast('다음 회차라고 치고, 받은 코드를 넣어 보세요'); },
+  nextShow(){ // 다음 날 새 팔찌(0003)를 찍은 것처럼 코드 입력 화면으로
+    if(getBand('0003').registered) return toast('팔찌 0003이 이미 등록돼 있어요. 초기화 후 다시 해 보세요');
+    go('A1',{band:'0003',recall:true}); toast('다음 날 새 팔찌 #0003이에요. 받은 코드를 넣어 보세요'); },
   async keep(){ await saveBand(V.p.band,{keepConsent:true,recallCode:newCode()}); render(); },
   call119(){ toast('시연용: 실제로 전화가 걸리지 않습니다'); },
   toReport(){ openReportFor({band:V.p.band}); },
