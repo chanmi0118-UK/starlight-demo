@@ -329,8 +329,11 @@ A2(p){
       ${b.recallCode?`<div class="mt-4 bg-red-50/60 border border-red-200 rounded-2xl p-5 text-center">
           <p class="text-xs font-bold text-brand mb-2">불러오기 코드</p>
           <p class="text-3xl font-black tracking-[0.3em] text-slate-900 tabular-nums">${esc(b.recallCode.slice(0,3))} ${esc(b.recallCode.slice(3))}</p>
-          <p class="text-xs text-slate-500 mt-2">다음 회차에 이 코드를 넣으면 다시 입력하지 않아도 돼요.<br>코드를 잃어버리면 문자 인증으로 불러올 수 있어요 (시연에서는 만들지 않음)</p>
-          ${p.band!=='0003'?`<button class="mt-4 w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="nextShow">${ic('forward')} 시연: 다음 날 새 팔찌(#0003)로 코드 넣어 보기</button>`:''}</div>`
+          <p class="text-xs text-slate-500 mt-2">다음 회차에 새 팔찌를 찍고 이 코드를 넣으면 다시 입력하지 않아도 돼요.</p>
+          ${b.phone?`<div class="mt-4 text-left bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+            <div class="flex items-center justify-between gap-2 mb-1"><span class="text-xs font-bold text-slate-700 flex items-center gap-1">${ic('comment-sms','text-blue-600')} 문자 · ${esc(b.phone)}</span><span class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">시연: 실제 발송 안 함</span></div>
+            <p class="text-sm text-slate-800 leading-relaxed">[STARLIGHT LIVE] 다음 회차 불러오기 코드 <b class="tabular-nums">${esc(b.recallCode)}</b>. 새 팔찌를 찍고 「코드 입력」에 넣으세요. 공연 기간 종료 후 24시간 안 파기.</p></div>`
+          :`<p class="mt-3 text-xs text-amber-700 font-semibold">연락처를 넣지 않아 문자로 보내지 못했어요. 코드를 적어 두세요.</p>`}</div>`
         :`<div class="mt-4 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
           <div><p class="text-sm font-bold text-slate-800">다른 회차도 관람하나요?</p><p class="text-xs text-slate-500 mt-0.5">정보 보관에 동의하면 6자리 불러오기 코드를 드려요</p></div>
           <button class="w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="keep">보관에 동의하고 코드 받기</button></div>`}
@@ -701,9 +704,6 @@ const ACT = {
     const b=src[1];
     go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:null,seatDetail:'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}});
     toast('정보를 불러왔어요. 오늘 좌석만 골라 주세요'); },
-  nextShow(){ // 다음 날 새 팔찌(0003)를 찍은 것처럼 코드 입력 화면으로
-    if(getBand('0003').registered) return toast('팔찌 0003이 이미 등록돼 있어요. 초기화 후 다시 해 보세요');
-    go('A1',{band:'0003',recall:true}); toast('다음 날 새 팔찌 #0003이에요. 받은 코드를 넣어 보세요'); },
   async keep(){ await saveBand(V.p.band,{keepConsent:true,recallCode:newCode()}); render(); },
   call119(){ toast('시연용: 실제로 전화가 걸리지 않습니다'); },
   toReport(){ openReportFor({band:V.p.band}); },
