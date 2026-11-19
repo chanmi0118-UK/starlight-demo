@@ -121,7 +121,7 @@ function locOf(r){
   return {zone:r.zoneId, blk:ok?m[1].toUpperCase():null, row:ok?+m[2]:0, seat:ok?+m[3]:0, pos:p&&p[1]};
 }
 function venueMap(reps, mini){
-  const hot=reps.map(r=>({...locOf(r),c:r.consciousness==='없음'?'#ef4444':'#f59e0b'})).filter(x=>x.zone);
+  const hot=reps.map(r=>({...locOf(r),c:r.consciousness==='없음'?'#ef4444':'#f59e0b',lab:r.locationLabel})).filter(x=>x.zone), tags=[];
   const seatXY=(z,b,row,s)=>{ const B=MAPB[z]; return [BLK[b]+14+(s-1)*((BW-28)/(SEATS-1)), B.y+22+(row-1)*((B.h-32)/((B.rows-1)||1))]; };
   const dot=(x,y,c,big)=>`<circle class="ring" cx="${x}" cy="${y}" r="${big?9:6}" fill="none" stroke="${c}" stroke-width="3"/><circle class="blink" cx="${x}" cy="${y}" r="${big?9:6}" fill="${c}"/>`;
   let s=`<rect x="300" y="10" width="400" height="40" rx="8" fill="#334155"/><text x="500" y="36" text-anchor="middle" fill="#cbd5e1" font-size="17" font-weight="700">무대</text>
@@ -129,19 +129,26 @@ function venueMap(reps, mini){
   ['STAND-A','STAND-B','STAND-C','STAND-D'].forEach(z=>{ const B=MAPB[z], h=hot.filter(x=>x.zone===z);
     s+=`<rect x="${B.x}" y="${B.y}" width="${B.w}" height="${B.h}" rx="10" fill="#1e293b" stroke="#475569"/>`;
     h.forEach(x=>{ const i={앞:0,중간:1,뒤:2}[x.pos]; const y=i==null?B.y:B.y+i*B.h/3, hh=i==null?B.h:B.h/3;
-      s+=`<rect class="blink" x="${B.x}" y="${y}" width="${B.w}" height="${hh}" rx="10" fill="${x.c}" fill-opacity=".45" stroke="${x.c}" stroke-width="3"/>`; });
+      s+=`<rect class="blink" x="${B.x}" y="${y}" width="${B.w}" height="${hh}" rx="10" fill="${x.c}" fill-opacity=".45" stroke="${x.c}" stroke-width="3"/>`; tags.push([B.x+B.w/2,y+hh/2,x]); });
     s+=`<text x="${B.x+B.w/2}" y="${B.y+B.h/2+6}" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="800">${B.t}</text>`;
     if(!mini) [1,2].forEach(k=>s+=`<line x1="${B.x+8}" x2="${B.x+B.w-8}" y1="${B.y+k*B.h/3}" y2="${B.y+k*B.h/3}" stroke="#334155" stroke-dasharray="3 4"/>`); });
   ['SEAT-1F','SEAT-2F'].forEach(z=>{ const B=MAPB[z], h=hot.filter(x=>x.zone===z);
     s+=`<text x="60" y="${B.y-8}" fill="#94a3b8" font-size="13" font-weight="700">${B.t}</text>`;
     Object.keys(BLK).forEach(b=>{ const lit=h.filter(x=>x.blk===b), whole=h.some(x=>!x.blk);
       s+=`<rect x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="#1e293b" stroke="#475569"/>`;
-      if(whole) s+=`<rect class="blink" x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="${h.find(x=>!x.blk).c}" fill-opacity=".35"/>`;
+      if(whole) s+=`<rect class="blink" x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="${h.find(x=>!x.blk).c}" fill-opacity=".35" stroke="${h.find(x=>!x.blk).c}" stroke-width="3"/>`;
+      if(whole&&b==='B') tags.push([500,B.y+B.h/2,{...h.find(x=>!x.blk),lab:h.find(x=>!x.blk).lab+' (좌석 번호 모름)'}]);
       if(mini){ if(lit.length) s+=`<rect x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="${lit[0].c}" fill-opacity=".25" stroke="${lit[0].c}" stroke-width="3"/>`;
         s+=`<text x="${BLK[b]+BW/2}" y="${B.y+B.h/2+6}" text-anchor="middle" fill="#cbd5e1" font-size="17" font-weight="700">${b}구역</text>`; }
       else{ for(let r=1;r<=B.rows;r++) for(let k=1;k<=SEATS;k++){ const [x,y]=seatXY(z,b,r,k); s+=`<circle cx="${x}" cy="${y}" r="3.6" fill="#475569"/>`; }
-        s+=`<text x="${BLK[b]+6}" y="${B.y+14}" fill="#94a3b8" font-size="11" font-weight="700">${b}구역</text>`; }
-      lit.forEach(x=>{ const [px,py]=seatXY(z,b,x.row,x.seat); s+=dot(px,py,x.c,mini); }); }); });
+        s+=`<text x="${BLK[b]+6}" y="${B.y+14}" fill="#94a3b8" font-size="11" font-weight="700">${b}구역</text>`;
+        if(b==='A') for(let r=1;r<=B.rows;r++){ const [,y]=seatXY(z,b,r,1); s+=`<text x="${BLK.A-6}" y="${y+4}" text-anchor="end" fill="#64748b" font-size="10">${r}열</text>`; }
+        [1,4,8,12,16].forEach(k=>{ const [x]=seatXY(z,b,1,k); s+=`<text x="${x}" y="${B.y+B.h+12}" text-anchor="middle" fill="#64748b" font-size="10">${k}</text>`; }); }
+      lit.forEach(x=>{ const [px,py]=seatXY(z,b,x.row,x.seat); s+=dot(px,py,x.c,mini); tags.push([px,py,x]);
+        if(!mini) s+=`<line x1="${BLK[b]}" x2="${BLK[b]+BW}" y1="${py}" y2="${py}" stroke="${x.c}" stroke-opacity=".5"/><line x1="${px}" x2="${px}" y1="${B.y}" y2="${B.y+B.h}" stroke="${x.c}" stroke-opacity=".5"/>`; }); }); });
+  // 불이 켜진 곳 위에 위치 이름표 (모니터)
+  if(!mini) tags.forEach(([x,y,o])=>{ const w=o.lab.length*14+24, tx=Math.min(Math.max(x-w/2,4),996-w), ty=Math.max(y-46,2);
+    s+=`<g><rect x="${tx}" y="${ty}" width="${w}" height="28" rx="14" fill="${o.c}"/><text x="${tx+w/2}" y="${ty+19}" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">${esc(o.lab)}</text></g>`; });
   s+=`<text x="60" y="548" fill="#93c5fd" font-size="13" font-weight="700">◆ 응급처치실·AED (1층)</text><text x="940" y="548" text-anchor="end" fill="#93c5fd" font-size="13" font-weight="700">◆ AED (2층 통로)</text>`;
   if(mini) s=s.replace(/font-size="(\d+)"/g,(m,n)=>`font-size="${Math.round(n*1.8)}"`); // 폰에서도 읽히게
   return `<svg viewBox="0 0 1000 560" class="w-full h-auto block" role="img" aria-label="공연장 좌석도, 신고 위치 표시">${s}</svg>`;
@@ -202,6 +209,7 @@ async function patch(id,p){
 async function resetAll(){
   if(!DB){ localSave({bands:{},reports:{}}); return localApply(); }
   for(const id of Object.keys(S.reports)) await write(()=>DB.collection('reports').doc(id).delete());
+  for(const id of Object.keys(S.bands)) if(!BANDS.includes(id)) await write(()=>DB.collection('bands').doc(id).delete());
   for(const id of BANDS) await write(()=>DB.collection('bands').doc(id).set(seedBand(id)));
 }
 
@@ -219,7 +227,7 @@ function badge(r){
 
 // ===== 화면 상태 =====
 let V = {s:'HOME',p:{}};
-const DARK = new Set(['S1','S2','S3','M1']);
+const DARK = new Set(['S1','S2','S3','S4','M1']);
 const LIVE = new Set(['A3','A4','A5','S1','S2','S3','M1']);
 function go(s,p){ V={s,p:p||{}}; autoSms(); render(); scrollTo(0,0); }
 // 의식 없음 신고: 그 신고의 출동 화면에 있으면 119 문자 창을 한 번 자동으로 연다
@@ -321,7 +329,8 @@ A2(p){
       ${b.recallCode?`<div class="mt-4 bg-red-50/60 border border-red-200 rounded-2xl p-5 text-center">
           <p class="text-xs font-bold text-brand mb-2">불러오기 코드</p>
           <p class="text-3xl font-black tracking-[0.3em] text-slate-900 tabular-nums">${esc(b.recallCode.slice(0,3))} ${esc(b.recallCode.slice(3))}</p>
-          <p class="text-xs text-slate-500 mt-2">다음 회차에 이 코드를 넣으면 다시 입력하지 않아도 돼요.<br>코드를 잃어버리면 문자 인증으로 불러올 수 있어요 (시연에서는 만들지 않음)</p></div>`
+          <p class="text-xs text-slate-500 mt-2">다음 회차에 이 코드를 넣으면 다시 입력하지 않아도 돼요.<br>코드를 잃어버리면 문자 인증으로 불러올 수 있어요 (시연에서는 만들지 않음)</p>
+          <button class="mt-4 w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="nextShow">${ic('forward')} 시연: 다음 회차 새 팔찌로 코드 넣어 보기</button></div>`
         :`<div class="mt-4 bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
           <div><p class="text-sm font-bold text-slate-800">다른 회차도 관람하나요?</p><p class="text-xs text-slate-500 mt-0.5">정보 보관에 동의하면 6자리 불러오기 코드를 드려요</p></div>
           <button class="w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-bold text-sm" data-act="keep">보관에 동의하고 코드 받기</button></div>`}
@@ -504,6 +513,23 @@ S3(p){
   </div></div>`;
 },
 
+S4(p){ // 인계 완료 기록
+  const r=S.reports[p.id]; if(!r) return SCREENS.S1();
+  const b=r.bandId?getBand(r.bandId):null, end=r.closedAt||Date.now();
+  const line=(k,v)=>`<div class="flex justify-between gap-3 py-2.5 border-b border-slate-700/70 last:border-0"><span class="text-sm text-slate-400 shrink-0">${k}</span><span class="text-sm font-bold text-white text-right">${v}</span></div>`;
+  return `<div class="${COL}">${dhdr('STAFF 인계 완료','<span class="shrink-0 text-xs font-black px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950">종료</span>','bg-emerald-400')}
+  <div class="flex-1 p-5 flex flex-col gap-3.5 safe-b">
+    <div class="bg-emerald-500/15 border-2 border-emerald-500/70 rounded-2xl p-5 text-center">
+      <div class="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl mx-auto mb-3">${ic('handshake')}</div>
+      <div class="text-xl font-black text-white">${esc(r.outcome||'인계')} 완료</div>
+      <p class="text-sm text-emerald-300 mt-1">신고부터 인계까지 <b class="tabular-nums">${fmt(end-r.createdAt)}</b></p></div>
+    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl px-4 py-1">
+      ${line('위치',esc(r.locationLabel))}${line('접수',clock(r.createdAt))}${line('팔찌 확인',r.verifiedAt?clock(r.verifiedAt)+' · '+fmt(r.verifiedAt-r.createdAt)+' 걸림':'확인 안 함')}${line('119 문자',r.sms119At?clock(r.sms119At)+' (시연)':'보내지 않음')}${line('인계',clock(end))}${line('등록 정보',b&&b.registered?'있음 (인계 후 24시간 안 파기)':'없음')}</div>
+    <p class="text-xs text-slate-400 text-center">이 기록은 응급처치실 모니터에도 '종료'로 남아요.</p>
+    <button class="w-full min-h-[56px] bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-2xl text-base font-bold text-white flex items-center justify-center gap-2" data-act="toS1">${ic('bell')} 알림 화면으로 (다음 신고 대기)</button>${foot}
+  </div></div>`;
+},
+
 // ---------- 모니터 ----------
 M1(){
   const all=allReports(), n=all.filter(isOpen).length, now=Date.now();
@@ -575,7 +601,7 @@ function stopScan(){
   $('scanner').hidden=true;
 }
 
-function newCode(){ let c; do{ c=String(Math.floor(100000+Math.random()*900000)); }while(BANDS.some(id=>getBand(id).recallCode===c)); return c; }
+function newCode(){ let c; do{ c=String(Math.floor(100000+Math.random()*900000)); }while(Object.values(S.bands).some(b=>b.recallCode===c)); return c; }
 // 시연 데이터 초기화 버튼 (QR 화면·모니터 아래). 실수 방지로 두 번 눌러야 함
 function resetBtn(tone){
   const c=V.p.confirm;
@@ -588,7 +614,10 @@ function resetBtn(tone){
 // ===== 그리기 =====
 function render(){
   document.body.classList.toggle('dark',DARK.has(V.s));
+  const keep=[...document.querySelectorAll('#app input[id]:not([data-f])')].map(i=>[i.id,i.value]), foc=document.activeElement&&document.activeElement.id;
   $('app').innerHTML=SCREENS[V.s](V.p);
+  keep.forEach(([id,v])=>{ const e=$(id); if(e&&!e.value) e.value=v; }); // 다른 폰 데이터로 다시 그려도 입력 중인 번호·코드 유지
+  if(foc){ const e=$(foc); e&&e.focus&&e.focus(); }
   $('modal').innerHTML=V.p.sms?smsModal(S.reports[V.p.id]):'';
   document.querySelectorAll('[data-qr]').forEach(el=>{ try{ new QRCode(el,{text:el.dataset.qr,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ el.textContent=el.dataset.qr; el.className='text-xs text-slate-500 break-all'; } });
   tick();
@@ -661,11 +690,16 @@ const ACT = {
   backA1(){ go('A1',{band:V.p.band}); },
   recallOpen(){ V.p.recall=true; render(); const i=$('recall'); i&&i.focus(); },
   recall(){ const code=($('recall').value||'').replace(/\D/g,'');
-    const src=BANDS.map(id=>[id,getBand(id)]).find(([id,b])=>id!==V.p.band&&b.keepConsent&&b.recallCode===code);
+    const src=Object.entries(Object.assign(Object.fromEntries(BANDS.map(id=>[id,getBand(id)])),S.bands)).find(([id,b])=>id!==V.p.band&&b.keepConsent&&b.recallCode===code);
     if(code.length!==6||!src) return toast('코드를 찾지 못했어요');
     const b=src[1];
     go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:null,seatDetail:'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}});
     toast('정보를 불러왔어요. 오늘 좌석만 골라 주세요'); },
+  async nextShow(){ // 지난 회차 정보는 보관본으로 두고, 이 팔찌를 새 팔찌(미등록)처럼 비운 뒤 코드 입력 화면으로
+    const id=V.p.band, b=getBand(id);
+    await saveBand('prev-'+b.recallCode,Object.assign({},b,{archived:true}));
+    await saveBand(id,{registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],medsText:'',medsWhere:'',consent:false,keepConsent:false,recallCode:'',minor:false,guardian:false});
+    go('A1',{band:id,recall:true}); toast('다음 회차라고 치고, 받은 코드를 넣어 보세요'); },
   async keep(){ await saveBand(V.p.band,{keepConsent:true,recallCode:newCode()}); render(); },
   call119(){ toast('시연용: 실제로 전화가 걸리지 않습니다'); },
   toReport(){ openReportFor({band:V.p.band}); },
@@ -697,10 +731,10 @@ const ACT = {
   sms(){ V.p.sms=true; render(); },
   closeSms(){ V.p.sms=false; render(); },
   async sendSms(){ await patch(V.p.id,{sms119At:Date.now()}); toast('시연용: 실제로 보내지 않았습니다'); },
-  async close(){ const r=S.reports[V.p.id]; await patch(r.id,{status:'closed',closedAt:Date.now(),outcome:r.sms119At?'119 인계':'응급처치실 인계'}); dset('active',null); go('S1'); },
+  async close(){ const r=S.reports[V.p.id]; await patch(r.id,{status:'closed',closedAt:Date.now(),outcome:r.sms119At?'119 인계':'응급처치실 인계'}); dset('active',null); go('S4',{id:r.id}); },
   scan(){ startScan(); },
   scanClose(){ stopScan(); },
-  manualVerify(){ const v=($('bandno').value||'').trim().padStart(4,'0'); if(!BANDS.includes(v)) return toast('팔찌 번호를 찾지 못했어요'); staffVerify(v); },
+  manualVerify(){ const v=($('bandno').value||'').replace(/\D/g,'').padStart(4,'0'); if(!BANDS.includes(v)) return toast('팔찌 번호를 찾지 못했어요'); staffVerify(v); },
   toMonitor(){ location.hash='monitor'; route(); },
   toHome(){ dset('role',null); location.hash='home'; route(); },
   toS1(){ go('S1'); },
@@ -739,6 +773,7 @@ function route(){
 const _onData=onData;
 onData=function(){ if(V.s==='WAIT'&&S.ready){ const p=V.p; if(p.place) return openReportFor({place:p.place}); return getBand(p.band).registered?openReportFor({band:p.band}):go('A1',{band:p.band}); } return _onData(); };
 addEventListener('hashchange',route);
+document.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; if(e.target.id==='bandno') ACT.manualVerify(); if(e.target.id==='recall') ACT.recall(); });
 route();
 init();
 </script>
