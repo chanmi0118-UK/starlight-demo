@@ -289,6 +289,9 @@ A2(p){
   return `<div class="${COL}">${lhdr('응급 팔찌 등록',pill('2 / 3','text-brand bg-red-50'),'backA1')}
   <div class="flex-1 p-5 space-y-5 safe-b">
     <div><h1 class="text-xl font-bold text-slate-900">응급 정보 입력</h1><p class="text-sm text-slate-500 mt-0.5">모두 선택 사항이에요. 넣어 둔 만큼 더 빨리 도울 수 있어요.</p></div>
+    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2.5">
+      <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="f-minor" data-f="minor" ${F.minor?'checked':''} class="w-6 h-6 rounded accent-[#C8102E] shrink-0"><span class="text-sm font-bold text-slate-800">만 14세 미만이에요</span></label>
+      <label class="flex items-start gap-3 cursor-pointer pl-9"><input type="checkbox" id="f-guardian" data-f="guardian" ${F.guardian?'checked':''} class="mt-0.5 w-5 h-5 rounded accent-[#C8102E] shrink-0"><span class="block text-xs leading-relaxed text-slate-600"><span class="font-bold text-slate-800">보호자(법정대리인)가 함께 보고 동의했어요</span><span class="block text-slate-500">만 14세 미만은 보호자 동의가 있어야 등록돼요. 등록하지 않아도 신고는 할 수 있어요.</span></span></label></div>
     <label class="block">${lab('이름','선택')}<input type="text" id="f-name" data-f="name" maxlength="10" placeholder="이름을 입력해 주세요" value="${esc(F.name)}" class="${INP}"></label>
     <label class="block">${lab('연락처','선택')}<input type="text" id="f-phone" data-f="phone" inputmode="tel" maxlength="13" placeholder="010-0000-0000" value="${esc(F.phone)}" class="${INP}"></label>
     <div>${lab('좌석 (스탠딩은 구역 선택)','선택')}
@@ -621,8 +624,9 @@ const ACT = {
   fzone(z){ V.p.f.zoneId=z; render(); },
   fcond(c){ const a=V.p.f.conditions, i=a.indexOf(c); i<0?a.push(c):a.splice(i,1); render(); },
   async save(){ const F=V.p.f, mt=F.medsText.trim();
+    if(F.minor&&!F.guardian) return toast('만 14세 미만은 보호자 동의가 있어야 등록돼요');
     if((F.conditions.length||mt)&&!F.consent) return toast('지병·가지고 있는 약을 저장하려면 동의가 필요해요');
-    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],medsText:F.consent?mt:'',medsWhere:F.consent&&mt?F.medsWhere.trim():'',consent:F.consent,registeredAt:Date.now(),
+    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],medsText:F.consent?mt:'',medsWhere:F.consent&&mt?F.medsWhere.trim():'',consent:F.consent,minor:!!F.minor,guardian:!!(F.minor&&F.guardian),registeredAt:Date.now(),
       ...(F.keep?{keepConsent:true,recallCode:getBand(V.p.band).recallCode||newCode()}:{})});
     go('A2',{band:V.p.band,done:true}); },
   pzone(z){ V.p.zone=z; V.p.pos=null; render(); },
