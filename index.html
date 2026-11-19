@@ -45,7 +45,9 @@ body.dark .toast{background:#fff;color:#0f172a}
 </head><body>
 <main id="app"></main>
 <div id="modal"></div>
-<style>#scanner:not([hidden]){display:flex}</style>
+<style>#scanner:not([hidden]){display:flex}
+.blink{animation:blink 1s ease-in-out infinite}@keyframes blink{50%{opacity:.25}}
+.ring{transform-box:fill-box;transform-origin:center;animation:ring 1.2s ease-out infinite}@keyframes ring{from{transform:scale(1);opacity:.9}to{transform:scale(3.2);opacity:0}}</style>
 <div id="scanner" hidden style="position:fixed;inset:0;z-index:40;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px">
   <p style="color:#fff;font-weight:800;font-size:18px;text-align:center">환자 팔찌의 QR을 네모 안에 맞추세요</p>
   <div style="position:relative;width:min(80vw,360px);aspect-ratio:1;border-radius:20px;overflow:hidden;border:4px solid #10b981">
@@ -104,6 +106,47 @@ function cardRows(r,b){ // 이 신고에 맞는 줄을 위로
   if(b&&b.registered) b.conditions.forEach(c=>COND_ROW[c]&&hit.add(COND_ROW[c]));
   return [...CARD.filter(x=>hit.has(x[0])).map(x=>[...x,true]), ...CARD.filter(x=>!hit.has(x[0])).map(x=>[...x,false])];
 }
+// ===== 공연장 좌석도 (신고 위치에 불 켜기) =====
+// 스탠딩은 구역(앞·중간·뒤), 지정석은 'B구역 5열 12번' 형식이면 그 자리, 아니면 구역 전체에 불
+const MAPB = {
+  'STAND-A':{x:60,y:70,w:200,h:150,t:'스탠딩 A'}, 'STAND-B':{x:280,y:70,w:200,h:150,t:'스탠딩 B'},
+  'STAND-C':{x:520,y:70,w:200,h:150,t:'스탠딩 C'}, 'STAND-D':{x:740,y:70,w:200,h:150,t:'스탠딩 D'},
+  'SEAT-1F':{y:262,h:118,rows:8,t:'1층 지정석'}, 'SEAT-2F':{y:422,h:96,rows:6,t:'2층 지정석'}
+};
+const BLK = {A:60,B:365,C:670}, BW=270, SEATS=16;
+function locOf(r){
+  const L=r.locationLabel||'', m=L.match(/([A-Ca-c])\s*구역\s*(\d+)\s*열\s*(\d+)\s*번/), p=L.match(/\((앞|중간|뒤)\)/);
+  const z=MAPB[r.zoneId]; if(!z) return null;
+  const ok=m&&+m[2]>=1&&+m[2]<=(z.rows||0)&&+m[3]>=1&&+m[3]<=SEATS;
+  return {zone:r.zoneId, blk:ok?m[1].toUpperCase():null, row:ok?+m[2]:0, seat:ok?+m[3]:0, pos:p&&p[1]};
+}
+function venueMap(reps, mini){
+  const hot=reps.map(r=>({...locOf(r),c:r.consciousness==='없음'?'#ef4444':'#f59e0b'})).filter(x=>x.zone);
+  const seatXY=(z,b,row,s)=>{ const B=MAPB[z]; return [BLK[b]+14+(s-1)*((BW-28)/(SEATS-1)), B.y+22+(row-1)*((B.h-32)/((B.rows-1)||1))]; };
+  const dot=(x,y,c,big)=>`<circle class="ring" cx="${x}" cy="${y}" r="${big?9:6}" fill="none" stroke="${c}" stroke-width="3"/><circle class="blink" cx="${x}" cy="${y}" r="${big?9:6}" fill="${c}"/>`;
+  let s=`<rect x="300" y="10" width="400" height="40" rx="8" fill="#334155"/><text x="500" y="36" text-anchor="middle" fill="#cbd5e1" font-size="17" font-weight="700">무대</text>
+    <rect x="482" y="70" width="36" height="150" fill="none" stroke="#10b981" stroke-dasharray="5 5"/><text x="500" y="240" text-anchor="middle" fill="#6ee7b7" font-size="12">중앙 스태프 통로</text>`;
+  ['STAND-A','STAND-B','STAND-C','STAND-D'].forEach(z=>{ const B=MAPB[z], h=hot.filter(x=>x.zone===z);
+    s+=`<rect x="${B.x}" y="${B.y}" width="${B.w}" height="${B.h}" rx="10" fill="#1e293b" stroke="#475569"/>`;
+    h.forEach(x=>{ const i={앞:0,중간:1,뒤:2}[x.pos]; const y=i==null?B.y:B.y+i*B.h/3, hh=i==null?B.h:B.h/3;
+      s+=`<rect class="blink" x="${B.x}" y="${y}" width="${B.w}" height="${hh}" rx="10" fill="${x.c}" fill-opacity=".45" stroke="${x.c}" stroke-width="3"/>`; });
+    s+=`<text x="${B.x+B.w/2}" y="${B.y+B.h/2+6}" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="800">${B.t}</text>`;
+    if(!mini) [1,2].forEach(k=>s+=`<line x1="${B.x+8}" x2="${B.x+B.w-8}" y1="${B.y+k*B.h/3}" y2="${B.y+k*B.h/3}" stroke="#334155" stroke-dasharray="3 4"/>`); });
+  ['SEAT-1F','SEAT-2F'].forEach(z=>{ const B=MAPB[z], h=hot.filter(x=>x.zone===z);
+    s+=`<text x="60" y="${B.y-8}" fill="#94a3b8" font-size="13" font-weight="700">${B.t}</text>`;
+    Object.keys(BLK).forEach(b=>{ const lit=h.filter(x=>x.blk===b), whole=h.some(x=>!x.blk);
+      s+=`<rect x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="#1e293b" stroke="#475569"/>`;
+      if(whole) s+=`<rect class="blink" x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="${h.find(x=>!x.blk).c}" fill-opacity=".35"/>`;
+      if(mini){ if(lit.length) s+=`<rect x="${BLK[b]}" y="${B.y}" width="${BW}" height="${B.h}" rx="8" fill="${lit[0].c}" fill-opacity=".25" stroke="${lit[0].c}" stroke-width="3"/>`;
+        s+=`<text x="${BLK[b]+BW/2}" y="${B.y+B.h/2+6}" text-anchor="middle" fill="#cbd5e1" font-size="17" font-weight="700">${b}구역</text>`; }
+      else{ for(let r=1;r<=B.rows;r++) for(let k=1;k<=SEATS;k++){ const [x,y]=seatXY(z,b,r,k); s+=`<circle cx="${x}" cy="${y}" r="3.6" fill="#475569"/>`; }
+        s+=`<text x="${BLK[b]+6}" y="${B.y+14}" fill="#94a3b8" font-size="11" font-weight="700">${b}구역</text>`; }
+      lit.forEach(x=>{ const [px,py]=seatXY(z,b,x.row,x.seat); s+=dot(px,py,x.c,mini); }); }); });
+  s+=`<text x="60" y="548" fill="#93c5fd" font-size="13" font-weight="700">◆ 응급처치실·AED (1층)</text><text x="940" y="548" text-anchor="end" fill="#93c5fd" font-size="13" font-weight="700">◆ AED (2층 통로)</text>`;
+  if(mini) s=s.replace(/font-size="(\d+)"/g,(m,n)=>`font-size="${Math.round(n*1.8)}"`); // 폰에서도 읽히게
+  return `<svg viewBox="0 0 1000 560" class="w-full h-auto block" role="img" aria-label="공연장 좌석도, 신고 위치 표시">${s}</svg>`;
+}
+
 const STATUS = {received:'접수',dispatched:'출동 중',verified:'도착·확인',closed:'종료',cancelled:'취소됨'};
 const seedBand = id => Object.assign({registered:false,name:'',phone:'',zoneId:null,seatDetail:'',conditions:[],medsText:'',medsWhere:'',consent:false,keepConsent:false,recallCode:''}, SEED[id]||{});
 
@@ -420,6 +463,7 @@ S2(p){
     <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4">
       <div class="text-xs text-slate-400 font-semibold mb-1 tabular-nums">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과 · ${src(r)}</div>
       <div class="text-xl font-black text-white leading-tight">응급 신고 · ${esc(r.locationLabel)}</div>
+      <div class="mt-3 rounded-xl bg-slate-900/70 border border-slate-700 p-2">${venueMap([r],true)}</div>
       <div class="mt-3 pt-3 border-t border-slate-700/80 flex flex-wrap items-center gap-2">${stChip('의식',r.consciousness)}${stChip('외상',r.trauma)}</div></div>
     ${regCard(b,{urgent,help:true,extra:ok})}
     ${guide.map(c=>`<div class="bg-amber-950/40 border border-amber-500/40 rounded-2xl p-4"><div class="text-sm font-bold text-amber-300 flex items-center gap-1.5 mb-1">${ic('circle-info')} ${esc(GUIDE[c][0])}</div>
@@ -475,6 +519,9 @@ M1(){
   return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${dhdr('응급처치실 모니터','<span class="shrink-0 text-xs font-semibold text-slate-400">스태프·의료팀 화면</span>',n?'bg-red-500':'')}
   <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
     <div class="flex items-baseline gap-3"><h1 class="text-2xl sm:text-3xl font-extrabold text-white">진행 중</h1><span class="text-4xl font-black tabular-nums ${n?'text-red-400':'text-slate-500'}">${n}건</span></div>
+    <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-4"><div class="flex flex-wrap items-center justify-between gap-2 mb-2"><b class="text-white">${ic('location-dot','text-red-400')} 신고 위치</b>
+      <span class="text-xs text-slate-400 flex gap-3"><span><span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-1"></span>의식 없음</span><span><span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 mr-1"></span>그 외</span></span></div>
+      ${venueMap(all.filter(isOpen))}</div>
     ${all.length?`<div class="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-800/60"><table class="w-full min-w-[680px] border-collapse text-base">
       <thead><tr>${['접수','위치','의식·외상','등록 정보','상태','경과'].map(h=>`<th class="text-left text-xs font-semibold text-slate-400 px-3 py-2.5 border-b border-slate-700 bg-slate-900/60">${h}</th>`).join('')}</tr></thead>
       <tbody>${all.map(row).join('')}</tbody></table></div>`
