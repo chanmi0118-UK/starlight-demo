@@ -419,7 +419,7 @@ A4(p){
       <p class="inline-flex items-center gap-1.5 mt-2 text-xs font-bold px-2.5 py-1 rounded-full ${cancelled?'bg-slate-100 text-slate-600':'bg-emerald-50 text-emerald-700'}">${ic('circle-info')} ${prog}</p></div>
     ${r.status==='received'?`<button class="w-full min-h-[52px] bg-slate-100 hover:bg-slate-200 active:scale-[0.99] text-slate-700 font-bold text-sm rounded-xl border border-slate-200 flex items-center justify-center gap-2 transition-all" data-act="cancel" data-until="${r.createdAt+10000}">${ic('clock','text-slate-500')}<span data-cd>실수로 눌렀어요 (10초 안에 취소)</span></button>`:''}
   </div>
-  <div>${open?'<p class="text-xs text-slate-400 text-center">스태프가 빠르게 이동 중이에요. 자리를 지켜 주세요.</p>':''}${foot}</div></div></div>`;
+  <div>${open?`<button class="w-full min-h-[52px] mb-3 rounded-2xl bg-slate-900 text-white font-bold" data-act="closeTab">${ic('xmark')} 화면 닫기</button><p class="text-xs text-slate-400 text-center">스태프가 빠르게 이동 중이에요. 자리를 지켜 주세요.</p>`:''}${foot}</div></div></div>`;
 },
 
 A5(p){
