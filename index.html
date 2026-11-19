@@ -61,6 +61,7 @@ body.dark .toast{background:#fff;color:#0f172a}
 <script>
 // ===== 고정 값 =====
 const APP = location.origin + location.pathname;
+const LOADV = Date.now().toString(36); // QR 주소에 붙여 폰이 예전 화면(캐시)을 열지 않게
 const ZONES = {
   'STAND-A':{name:'1층 스탠딩 A구역',stand:true}, 'STAND-B':{name:'1층 스탠딩 B구역',stand:true},
   'STAND-C':{name:'1층 스탠딩 C구역',stand:true}, 'STAND-D':{name:'1층 스탠딩 D구역',stand:true},
@@ -68,6 +69,10 @@ const ZONES = {
 };
 const ZONE_IDS = Object.keys(ZONES);
 const SHORT = {'STAND-A':'스탠딩 A','STAND-B':'스탠딩 B','STAND-C':'스탠딩 C','STAND-D':'스탠딩 D','SEAT-1F':'1층 좌석','SEAT-2F':'2층 좌석'};
+const CC = [['+82','한국'],['+1','미국·캐나다'],['+81','일본'],['+86','중국'],['+886','대만'],['+852','홍콩'],['+66','태국'],['+84','베트남'],['+63','필리핀'],['+62','인도네시아'],['+60','말레이시아'],['+65','싱가포르'],['+61','호주'],['+44','영국'],['+33','프랑스'],['+49','독일'],['+52','멕시코'],['+55','브라질']];
+// 저장: 한국 번호는 그대로, 해외 번호는 '+국가번호 번호' (스태프 화면·119 문자에 그대로 표시)
+const joinPhone=(cc,ph)=>{ ph=(ph||'').trim(); if(!ph) return ''; return !cc||cc==='+82'?ph:cc+' '+ph.replace(/^0+/,''); };
+const splitPhone=ph=>{ const m=(ph||'').match(/^(\+\d{1,4})\s+(.*)$/); return m?{cc:m[1],phone:m[2]}:{cc:'+82',phone:ph||''}; };
 const CONDS = ['심장 질환','당뇨','천식','뇌전증','알레르기','기타'];
 // 가지고 있는 약: 자유 입력(medsText) + 둔 곳(medsWhere)
 const medsText = b => b.medsText ? b.medsText+(b.medsWhere?' ('+b.medsWhere+')':'') : '';
@@ -284,7 +289,7 @@ HOME(){
     <div><h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">폰 카메라로 QR을 찍으세요</h1>
       <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 로그인은 필요 없어요.</p></div>
     <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">${cards.map(([h,t,s])=>`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
-      <div class="qr" data-qr="${APP}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
+      <div class="qr" data-qr="${APP}?v=${LOADV}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
     <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>
     ${resetBtn('light')}${foot}</div></div>`;
 },
@@ -356,7 +361,8 @@ A2(p){
       <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="f-minor" data-f="minor" ${F.minor?'checked':''} class="w-6 h-6 rounded accent-[#C8102E] shrink-0"><span class="text-sm font-bold text-slate-800">만 14세 미만이에요</span></label>
       <label class="flex items-start gap-3 cursor-pointer pl-9"><input type="checkbox" id="f-guardian" data-f="guardian" ${F.guardian?'checked':''} class="mt-0.5 w-5 h-5 rounded accent-[#C8102E] shrink-0"><span class="block text-xs leading-relaxed text-slate-600"><span class="font-bold text-slate-800">보호자(법정대리인)가 함께 보고 동의했어요</span><span class="block text-slate-500">만 14세 미만은 보호자 동의가 있어야 등록돼요. 등록하지 않아도 신고는 할 수 있어요.</span></span></label></div>
     <label class="block">${lab('이름','선택')}<input type="text" id="f-name" data-f="name" maxlength="10" placeholder="이름을 입력해 주세요" value="${esc(F.name)}" class="${INP}"></label>
-    <label class="block">${lab('연락처','선택')}<input type="text" id="f-phone" data-f="phone" inputmode="tel" maxlength="13" placeholder="010-0000-0000" value="${esc(F.phone)}" class="${INP}"></label>
+    <label class="block">${lab('연락처','선택')}<span class="flex gap-2"><select data-f="cc" aria-label="국가 번호" class="shrink-0 h-12 px-2 rounded-xl border border-slate-300 bg-white text-base font-semibold text-slate-900">${CC.map(([c,n])=>`<option value="${c}" ${(F.cc||'+82')===c?'selected':''}>${n} ${c}</option>`).join('')}</select>
+      <input type="text" id="f-phone" data-f="phone" inputmode="tel" maxlength="20" placeholder="${(F.cc||'+82')==='+82'?'010-0000-0000':'휴대폰 번호'}" value="${esc(F.phone)}" class="${INP}"></span></label>
     <div>${lab('좌석 (스탠딩은 구역 선택)','선택')}
       <div class="grid grid-cols-3 gap-2">${ZONE_IDS.map(z=>chip(F.zoneId===z,'fzone',z,SHORT[z])).join('')}</div>
       ${seat?`<input type="text" id="f-seat" data-f="seatDetail" placeholder="예: B구역 5열 12번" aria-label="좌석 번호" value="${esc(F.seatDetail)}" class="${INP} mt-2">`:''}</div>
@@ -715,14 +721,14 @@ async function staffVerify(bandId){
 
 // ===== 버튼 =====
 const ACT = {
-  startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
+  startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',...splitPhone(b.phone),zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
   backA1(){ go('A1',{band:V.p.band}); },
   recallOpen(){ V.p.recall=true; render(); const i=$('recall'); i&&i.focus(); },
   recall(){ const code=($('recall').value||'').replace(/\D/g,'');
     const src=Object.entries(Object.assign(Object.fromEntries(BANDS.map(id=>[id,getBand(id)])),S.bands)).find(([id,b])=>id!==V.p.band&&b.keepConsent&&b.recallCode===code);
     if(code.length!==6||!src) return toast('코드를 찾지 못했어요');
     const b=src[1];
-    go('A2',{band:V.p.band,f:{name:b.name||'',phone:b.phone||'',zoneId:null,seatDetail:'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}});
+    go('A2',{band:V.p.band,f:{name:b.name||'',...splitPhone(b.phone),zoneId:null,seatDetail:'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}});
     toast('정보를 불러왔어요. 오늘 좌석만 골라 주세요'); },
   async keep(){ await saveBand(V.p.band,{keepConsent:true,recallCode:newCode()}); render(); },
   call119(){ toast('시연용: 실제로 전화가 걸리지 않습니다'); },
@@ -732,7 +738,7 @@ const ACT = {
   async save(){ const F=V.p.f, mt=F.medsText.trim();
     if(F.minor&&!F.guardian) return toast('만 14세 미만은 보호자 동의가 있어야 등록돼요');
     if((F.conditions.length||mt)&&!F.consent) return toast('지병·가지고 있는 약을 저장하려면 동의가 필요해요');
-    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:F.phone.trim(),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],medsText:F.consent?mt:'',medsWhere:F.consent&&mt?F.medsWhere.trim():'',consent:F.consent,minor:!!F.minor,guardian:!!(F.minor&&F.guardian),registeredAt:Date.now(),
+    await saveBand(V.p.band,{registered:true,name:F.name.trim(),phone:joinPhone(F.cc,F.phone),zoneId:F.zoneId||null,seatDetail:F.zoneId&&!ZONES[F.zoneId].stand?F.seatDetail.trim():'',conditions:F.consent?F.conditions:[],medsText:F.consent?mt:'',medsWhere:F.consent&&mt?F.medsWhere.trim():'',consent:F.consent,minor:!!F.minor,guardian:!!(F.minor&&F.guardian),registeredAt:Date.now(),
       ...(F.keep?{keepConsent:true,recallCode:getBand(V.p.band).recallCode||newCode()}:{})});
     go('A2',{band:V.p.band,done:true}); },
   pzone(z){ V.p.zone=z; V.p.pos=null; render(); },
