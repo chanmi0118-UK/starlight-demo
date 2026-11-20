@@ -361,7 +361,7 @@ A2(p){
           <p class="text-xs font-bold text-brand mb-2">${L('불러오기 코드')}</p>
           <p class="text-3xl font-black tracking-[0.3em] text-slate-900 tabular-nums">${esc(b.recallCode.slice(0,3))} ${esc(b.recallCode.slice(3))}</p>
           <button class="mt-3 inline-flex items-center gap-2 min-h-[44px] px-5 rounded-xl bg-white border-2 border-slate-900 text-slate-900 font-bold text-sm" data-act="copyCode">${ic('copy')} ${L('코드 복사')}</button>
-          ${navigator.share?`<button class="mt-3 ml-1 inline-flex items-center gap-2 min-h-[44px] px-5 rounded-xl bg-white border-2 border-slate-900 text-slate-900 font-bold text-sm" data-act="shareCode">${ic('arrow-up-from-bracket')} ${L('공유해서 저장')}</button>`:''}
+          ${`<button class="mt-3 ml-1 inline-flex items-center gap-2 min-h-[44px] px-5 rounded-xl bg-white border-2 border-slate-900 text-slate-900 font-bold text-sm" data-act="shareCode">${ic('arrow-up-from-bracket')} ${L('공유해서 저장')}</button>`}
           <p class="text-xs text-slate-500 mt-2">${L('다음 회차에 새 팔찌를 찍고 이 코드를 넣으면 다시 입력하지 않아도 돼요.')}</p>
           ${b.phone?`<div class="mt-4 text-left bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
             <div class="flex items-center justify-between gap-2 mb-1"><span class="text-xs font-bold text-slate-700 flex items-center gap-1">${ic('comment-sms','text-blue-600')} ${L('문자')} · ${esc(b.phone)}</span><span class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">${L('시연: 실제 발송 안 함')}</span></div>
@@ -780,7 +780,8 @@ const ACT = {
   closeCode(){ V.p.codeSms=false; render(); },
   async sendCode(){ await saveBand(V.p.band,{codeSentAt:Date.now()}); V.p.codeSms=false; render(); toast(L('코드 문자를 보냈어요 (시연)')); },
   lang(l){ dset('lang',l); document.documentElement.lang=l; render(); },
-  async shareCode(){ const c=getBand(V.p.band).recallCode; try{ await navigator.share({text:L('[STARLIGHT LIVE] 다음 회차 불러오기 코드 {0}. 새 팔찌를 찍고 「코드 입력」에 넣으세요. 공연 기간 종료 후 24시간 안 파기.',c)}); }catch(e){} },
+  async shareCode(){ const c=getBand(V.p.band).recallCode; if(!navigator.share) return ACT.copyCode(); // 공유 기능이 없는 브라우저는 복사로
+    try{ await navigator.share({text:L('[STARLIGHT LIVE] 다음 회차 불러오기 코드 {0}. 새 팔찌를 찍고 「코드 입력」에 넣으세요. 공연 기간 종료 후 24시간 안 파기.',c)}); }catch(e){} },
   async copyCode(){ const c=getBand(V.p.band).recallCode;
     try{ await navigator.clipboard.writeText(c); toast(L('코드를 복사했어요. 메모나 메시지에 붙여 넣어 두세요')); }
     catch(e){ try{ const i=document.createElement('textarea'); i.value=c; document.body.appendChild(i); i.select(); const ok=document.execCommand('copy'); i.remove(); toast(L(ok?'코드를 복사했어요. 메모나 메시지에 붙여 넣어 두세요':'복사하지 못했어요. 화면을 캡처해 두세요')); }catch(e2){ toast(L('복사하지 못했어요. 화면을 캡처해 두세요')); } } },
