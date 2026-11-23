@@ -168,6 +168,8 @@ function venueMap(reps, mini){
 
 const smsHref=(to,body)=>'sms:'+String(to).replace(/[^\d+]/g,'')+(/iPhone|iPad|iPod/.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(body);
 // 다른 팔찌에서 가장 최근에 받은 불러오기 코드 (새 팔찌 첫 화면에 연동해 보여 줌)
+// 붙여 넣은 공유 문장·띄어 쓴 코드(135 790)에서 6자리만 골라냄
+function recallCode(v){ const m=String(v||'').match(/(?<!\d)(\d{3})[\s-]?(\d{3})(?!\d)/); return m?m[1]+m[2]:''; }
 function latestCode(except){ const all=Object.assign(Object.fromEntries(BANDS.map(id=>[id,getBand(id)])),S.bands);
   const c=Object.entries(all).filter(([id,b])=>id!==except&&b.keepConsent&&b.recallCode&&b.registeredAt).sort((a,b)=>(b[1].registeredAt||0)-(a[1].registeredAt||0))[0];
   return c?{band:c[0],code:c[1].recallCode}:null; }
@@ -335,7 +337,7 @@ A1(p){ const lc=latestCode(p.band); return `<div class="${COL}">${lhdr(L('응급
       <button class="${BTN_RED}" data-act="startReg">${L('등록 시작')} ${ic('arrow-right','text-sm')}</button>
       ${p.recall||lc||p.band==='0003'?`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-2">
         <p class="text-sm font-bold text-slate-800">${L('다른 회차에서 받은 불러오기 코드')}</p>
-        <div class="flex gap-2"><input type="text" id="recall" inputmode="numeric" maxlength="6" placeholder="${L('6자리 코드 (다 넣으면 바로 불러와요)')}" value="" class="flex-1 min-w-0 h-12 px-4 rounded-xl border border-slate-300 text-lg tracking-widest text-slate-900 bg-white">
+        <div class="flex gap-2"><input type="text" id="recall" inputmode="numeric" placeholder="${L('6자리 코드 (다 넣으면 바로 불러와요)')}" value="" class="flex-1 min-w-0 h-12 px-4 rounded-xl border border-slate-300 text-lg tracking-widest text-slate-900 bg-white">
           <button class="px-5 rounded-xl bg-slate-900 text-white font-bold" data-act="recall">${L('불러오기')}</button></div>
         <p class="text-xs text-slate-400">${L('공유해서 저장해 둔 6자리 코드를 넣으세요')} · ${L('시연용 예시 코드: 482915')}</p></div>`
       :`<div class="bg-white border-2 border-slate-200 rounded-2xl p-4 flex items-center gap-3">
@@ -742,7 +744,7 @@ const ACT = {
   startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',...splitPhone(b.phone),zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
   backA1(){ go('A1',{band:V.p.band}); },
   recallOpen(){ V.p.recall=true; render(); const i=$('recall'); i&&i.focus(); },
-  recall(){ const code=($('recall').value||'').replace(/\D/g,'');
+  recall(){ const code=recallCode($('recall').value);
     const src=Object.entries(Object.assign(Object.fromEntries(BANDS.map(id=>[id,getBand(id)])),S.bands)).find(([id,b])=>id!==V.p.band&&b.keepConsent&&b.recallCode===code);
     if(code.length!==6||!src) return toast(L('코드를 찾지 못했어요'));
     const b=src[1];
@@ -802,7 +804,7 @@ const ACT = {
     toast('초기화 중…'); await resetAll(); [V.s==='M1'?'':'role','active','smsOpened','urgentSeen'].forEach(k=>k&&dset(k,null)); known=null; V.p.confirm=false; render(); toast('처음 상태로 되돌렸어요'); }
 };
 document.addEventListener('click',e=>{ const el=e.target.closest('[data-act]'); if(!el||el.disabled) return; const f=ACT[el.dataset.act]; if(f) f(el.dataset.arg,el); });
-document.addEventListener('input',e=>{ if(e.target.id==='recall'&&e.target.value.replace(/\D/g,'').length===6) return ACT.recall(); // 6자리를 다 넣으면 바로 불러오기
+document.addEventListener('input',e=>{ if(e.target.id==='recall'&&recallCode(e.target.value)) return ACT.recall(); // 6자리를 다 넣으면 바로 불러오기
   const k=e.target.dataset&&e.target.dataset.f; if(!k||!V.p.f) return; V.p.f[k]=e.target.type==='checkbox'?e.target.checked:e.target.value; });
 
 // ===== 진입 (QR 해시) =====
