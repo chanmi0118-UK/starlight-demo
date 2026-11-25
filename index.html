@@ -561,7 +561,7 @@ S4(p){ // 인계 완료 기록
   const r=S.reports[p.id]; if(!r) return SCREENS.S1();
   const b=r.bandId?getBand(r.bandId):null, end=r.closedAt||Date.now();
   const line=(k,v)=>`<div class="flex justify-between gap-3 py-2.5 border-b border-slate-700/70 last:border-0"><span class="text-sm text-slate-400 shrink-0">${k}</span><span class="text-sm font-bold text-white text-right">${v}</span></div>`;
-  return `<div class="${COL}">${dhdr('STAFF 인계 완료','<span class="shrink-0 text-xs font-black px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950">종료</span>','bg-emerald-400')}
+  return `<div class="${COL}">${dhdr('STAFF 인계 완료','<button class="shrink-0 min-h-[36px] text-xs font-black px-3 py-1 rounded-md bg-emerald-400 hover:bg-emerald-300 text-slate-950" data-act="toS1" aria-label="종료하고 알림 화면으로">종료 →</button>','bg-emerald-400')}
   <div class="flex-1 p-5 flex flex-col gap-3.5 safe-b">
     <div class="bg-emerald-500/15 border-2 border-emerald-500/70 rounded-2xl p-5 text-center">
       <div class="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl mx-auto mb-3">${ic('handshake')}</div>
