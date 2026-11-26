@@ -314,7 +314,7 @@ HOME(){
   return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${lhdr('응급 팔찌 시연',pill('QR 허브','text-brand bg-red-50'))}
   <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
     <div><h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">폰 카메라로 QR을 찍으세요</h1>
-      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 로그인은 필요 없어요.</p></div>
+      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 시연판은 로그인 없이 열려요(실제 운영은 스태프 로그인).</p></div>
     <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">${cards.map(([h,t,s])=>`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
       <div class="qr" data-qr="${APP}?v=${LOADV}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
     <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>
