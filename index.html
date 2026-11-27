@@ -201,8 +201,10 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 const fmt = ms => { const s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 const clock = t => t ? new Date(t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
 const mem = {};
-function dget(k,d){ try{ const v=localStorage.getItem('sl2-'+k); return v==null?d:JSON.parse(v); }catch(e){ return mem[k]==null?d:mem[k]; } }
-function dset(k,v){ mem[k]=v; try{ v==null?localStorage.removeItem('sl2-'+k):localStorage.setItem('sl2-'+k,JSON.stringify(v)); }catch(e){} }
+// 한 화면 시연(showcase.html): 화면마다 역할 기억을 따로 둔다 (?ns=r|s|m). 없으면 기존과 같음
+const NS=(()=>{ try{ return (new URLSearchParams(location.search).get('ns')||'').replace(/[^a-z]/g,'').slice(0,4); }catch(e){ return ''; } })();
+function dget(k,d){ try{ const v=localStorage.getItem('sl2-'+NS+k); return v==null?d:JSON.parse(v); }catch(e){ return mem[k]==null?d:mem[k]; } }
+function dset(k,v){ mem[k]=v; try{ v==null?localStorage.removeItem('sl2-'+NS+k):localStorage.setItem('sl2-'+NS+k,JSON.stringify(v)); }catch(e){} }
 let toastT;
 function toast(m){ const t=$('toast'); t.textContent=m; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
 
@@ -286,8 +288,18 @@ const lhdr = (t,right,back) => `<header class="sticky top-0 z-10 bg-white border
   <div class="flex items-center gap-2 min-w-0">${back?`<button type="button" data-act="${back}" aria-label="뒤로" class="w-10 h-10 -ml-3 flex items-center justify-center text-slate-400 hover:text-slate-600">${ic('chevron-left')}</button>`:''}<span class="text-brand font-black text-lg">★</span><h2 class="text-sm font-bold tracking-tight leading-tight text-slate-900">STARLIGHT LIVE ${esc(t)}</h2></div>${right||''}</header>`;
 // 스태프·모니터용 어두운 헤더
 const dhdr = (t,right,dot) => `<header class="sticky top-0 z-10 bg-slate-950 border-b border-slate-800 px-5 py-3.5 flex items-center justify-between gap-2">
-  <div class="flex items-center gap-2 min-w-0"><span class="w-2.5 h-2.5 shrink-0 rounded-full ${dot?dot+' animate-pulse':'bg-slate-600'}"></span><h2 class="text-sm font-extrabold tracking-tight text-white truncate">${esc(t)}</h2></div>${right||''}</header>`;
+  <div class="flex items-center gap-2 min-w-0"><span class="w-2.5 h-2.5 shrink-0 rounded-full ${dot?dot+' animate-pulse':'bg-slate-600'}"></span><h2 class="text-sm font-extrabold tracking-tight text-white truncate">${esc(t)}</h2></div><div class="flex items-center gap-2 shrink-0">${right||''}${needAuth(V.s)&&authed()&&!NS?'<button class="text-[11px] font-bold text-slate-300 border border-slate-600 hover:bg-slate-800 rounded-lg px-2 py-1" data-act="logout">근무 종료</button>':''}</div></header>`;
 const foot = '<p class="text-xs text-center text-slate-400 pt-2">시연용 화면입니다. 실제 신고·전화·문자는 되지 않습니다.</p>';
+function loginScreen(s){ const mon=s==='M1';
+  return `<div class="min-h-[100dvh] max-w-[480px] mx-auto flex flex-col">${dhdr(mon?'응급처치실 모니터':'STAFF 알림','<span class="shrink-0 text-xs font-semibold text-slate-400">로그인</span>')}
+  <div class="flex-1 p-6 flex flex-col justify-center gap-5 safe-b">
+    <div class="text-center"><div class="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 text-slate-200 mx-auto flex items-center justify-center text-2xl mb-3">${ic('lock')}</div>
+      <h1 class="text-2xl font-extrabold text-white">${mon?'응급처치실 로그인':'스태프 로그인'}</h1>
+      <p class="text-sm text-slate-400 mt-2 leading-relaxed">관객의 지병·연락처가 보이는 화면이라 로그인이 필요해요.<br>근무 시작 때 한 번만 하면 그날 근무가 끝날 때까지 유지돼요.</p></div>
+    <input type="text" id="login-code" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="근무 코드" aria-label="근무 코드" onkeydown="if(event.key==='Enter')ACT.login()" class="w-full h-14 px-4 rounded-2xl bg-slate-900 border border-slate-700 text-white text-center text-2xl tracking-[0.3em] placeholder:text-slate-500 placeholder:tracking-normal placeholder:text-base">
+    <button class="w-full min-h-[56px] rounded-2xl bg-brand hover:bg-[#b00d27] text-white font-bold text-base" data-act="login">${ic('right-to-bracket')} 로그인</button>
+    <p class="text-xs text-slate-500 text-center leading-relaxed">시연용 코드: <b class="text-slate-300 tracking-widest">${LOGIN_CODE}</b><br>실제 운영은 스태프 개인 계정 로그인, 열람 기록, 근무 종료 시 권한 삭제</p>${foot}
+  </div></div>`; }
 // 밝은 화면 선택 버튼 (aria-pressed 유지)
 const chip = (on,act,arg,label,warn) => `<button type="button" aria-pressed="${on}" data-act="${act}" data-arg="${esc(arg)}" class="min-h-[44px] px-3 rounded-xl text-sm border-2 flex items-center justify-center gap-1.5 transition-colors ${on?'font-bold border-brand bg-red-50 text-brand shadow-sm':'font-medium border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'}">${on?ic(warn?'triangle-exclamation':'check','text-[11px]'):''}${esc(label)}</button>`;
 // 어두운 화면 상태 표시 (의식·외상)
@@ -315,7 +327,7 @@ HOME(){
   return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${lhdr('응급 팔찌 시연',pill('QR 허브','text-brand bg-red-50'))}
   <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
     <div><h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">폰 카메라로 QR을 찍으세요</h1>
-      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 시연판은 로그인 없이 열려요(실제 운영은 스태프 로그인).</p></div>
+      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 스태프·모니터 화면은 시연용 코드 0000으로 한 번 로그인하면 계속 유지돼요.</p></div>
     <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">${cards.map(([h,t,s])=>`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
       <div class="qr" data-qr="${APP}?v=${LOADV}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
     <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>
@@ -666,7 +678,7 @@ function closeTo(msg){ try{ window.close(); }catch(e){} setTimeout(()=>{ try{ hi
 function render(){
   document.body.classList.toggle('dark',DARK.has(V.s));
   const keep=[...document.querySelectorAll('#app input[id]:not([data-f])')].map(i=>[i.id,i.value]), foc=document.activeElement&&document.activeElement.id;
-  $('app').innerHTML=SCREENS[V.s](V.p);
+  $('app').innerHTML=(needAuth(V.s)&&!authed())?loginScreen(V.s):SCREENS[V.s](V.p);
   keep.forEach(([id,v])=>{ const e=$(id); if(e&&!e.value) e.value=v; }); // 다른 폰 데이터로 다시 그려도 입력 중인 번호·코드 유지
   if(foc){ const e=$(foc); e&&e.focus&&e.focus(); }
   $('modal').innerHTML=V.p.sms?smsModal(S.reports[V.p.id]):V.p.codeSms?codeModal(getBand(V.p.band)):'';
@@ -723,7 +735,11 @@ function ring(){
   try{ navigator.vibrate&&navigator.vibrate([300,120,300]); }catch(e){}
   document.body.classList.remove('flash'); void document.body.offsetWidth; document.body.classList.add('flash');
 }
-const isStaff = () => dget('role',null)==='staff';
+// 스태프·모니터 로그인 (시연용 코드). 한 번 넣으면 이 기기에서 근무 종료까지 유지. 한 화면 시연(?ns=)은 바로 들어감
+const LOGIN_CODE='0000';
+const needAuth = s => /^S\d$/.test(s)||s==='M1';
+const authed = () => !!NS || !!dget('auth',null);
+const isStaff = () => dget('role',null)==='staff' && authed();
 function onData(){
   if(!S.ready) return;
   if(pendingBand){ const id=pendingBand; pendingBand=null; return staffVerify(id); }
@@ -752,6 +768,8 @@ async function staffVerify(bandId){
 
 // ===== 버튼 =====
 const ACT = {
+  login(){ const v=($('login-code')||{}).value||''; if(v.trim()!==LOGIN_CODE){ toast('근무 코드가 맞지 않아요'); return; } dset('auth',Date.now()); known=null; render(); },
+  logout(){ dset('auth',null); dset('active',null); render(); toast('근무를 종료했어요. 권한이 해제됐어요'); },
   startReg(){ const b=getBand(V.p.band); go('A2',{band:V.p.band,f:{name:b.name||'',...splitPhone(b.phone),zoneId:b.zoneId,seatDetail:b.seatDetail||'',conditions:(b.conditions||[]).slice(),medsText:b.medsText||'',medsWhere:b.medsWhere||'',consent:!!b.consent}}); },
   backA1(){ go('A1',{band:V.p.band}); },
   recallOpen(){ V.p.recall=true; render(); const i=$('recall'); i&&i.focus(); },
@@ -815,7 +833,7 @@ const ACT = {
   toS1(){ go('S1'); },
   toS2(id){ go('S2',{id}); },
   async reset(){ if(!V.p.confirm){ V.p.confirm=true; const s=V.s; setTimeout(()=>{ if(V.s===s&&V.p.confirm){ V.p.confirm=false; render(); } },4000); return render(); }
-    toast('초기화 중…'); await resetAll(); [V.s==='M1'?'':'role','active','smsOpened','urgentSeen'].forEach(k=>k&&dset(k,null)); known=null; V.p.confirm=false; render(); toast('처음 상태로 되돌렸어요'); }
+    toast('초기화 중…'); await resetAll(); [V.s==='M1'?'':'role','active','smsOpened','urgentSeen','auth'].forEach(k=>k&&dset(k,null)); known=null; V.p.confirm=false; render(); toast('처음 상태로 되돌렸어요'); }
 };
 document.addEventListener('click',e=>{ const el=e.target.closest('[data-act]'); if(!el||el.disabled) return; const f=ACT[el.dataset.act]; if(f) f(el.dataset.arg,el); });
 document.addEventListener('input',e=>{ if(e.target.id==='recall'&&recallCode(e.target.value)) return ACT.recall(); // 6자리를 다 넣으면 바로 불러오기
