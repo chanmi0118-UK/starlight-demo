@@ -535,10 +535,10 @@ S2(p){
   const ok=r.verifyResult?`<span class="inline-flex items-center gap-1.5 mt-2.5 text-xs font-bold px-2 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">${ic('circle-check')} 팔찌 확인 완료 · #${esc(r.bandId)}${r.verifyResult==='변경'?' (팔찌가 달라 정보 변경)':''}</span>`:'';
   return `<div class="${COL}">${dhdr('STAFF 알림',badge(r),urgent?'bg-red-500':'bg-amber-400')}
   <div class="flex-1 p-5 flex flex-col gap-3.5 safe-b">
-    ${urgent?`<div class="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-4 shadow-lg border border-red-500 flex items-center gap-2.5 font-black text-base text-white">${ic('person-running','text-xl')}<span>AED 들고 출동 → 도착 즉시 AED 준비</span></div>`
-      :`<div class="bg-slate-800 rounded-2xl p-3.5 border border-slate-700 flex items-center justify-between gap-2"><div class="flex items-center gap-2 font-bold text-base text-white"><span class="w-2 h-2 rounded-full bg-amber-400"></span>AED 들고 출동</div><span class="text-xs text-slate-400 text-right">의식 저하 대비 장비 휴대</span></div>`}
+    ${urgent?`<div class="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-4 shadow-lg border border-red-500 flex items-center gap-2.5 font-black text-base text-white">${ic('person-running','text-xl')}<span>환자 곁으로 → 바로 가슴압박 (AED는 응급처치실에서 출동)</span></div>`
+      :`<div class="bg-slate-800 rounded-2xl p-3.5 border border-slate-700 flex items-center justify-between gap-2"><div class="flex items-center gap-2 font-bold text-base text-white"><span class="w-2 h-2 rounded-full bg-amber-400"></span>환자 곁으로 출동 (AED는 응급처치실에서 함께)</div><span class="text-xs text-slate-400 text-right">의식 저하 대비 장비 휴대</span></div>`}
     ${r.reporter119At?`<div class="bg-blue-500/15 border border-blue-500/50 rounded-2xl p-3.5 flex items-center gap-2 font-bold text-blue-300">${ic('phone')} 신고자 119 통화 중 · ${clock(r.reporter119At)} → 119 문자 생략 가능</div>`:''}
-    ${r.trauma==='있음'?`<div class="bg-amber-500/15 border border-amber-500/50 rounded-2xl p-3.5 flex items-center gap-2 font-bold text-amber-300">${ic('bandage')} 구급상자 챙기기</div>`:''}
+    ${r.trauma==='있음'?`<div class="bg-amber-500/15 border border-amber-500/50 rounded-2xl p-3.5 flex items-center gap-2 font-bold text-amber-300">${ic('bandage')} 외상 있음 · 응급처치실이 구급상자 챙겨 옴</div>`:''}
     <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4">
       <div class="text-xs text-slate-400 font-semibold mb-1 tabular-nums">응급 접수 <span data-since="${r.createdAt}">${fmt(Date.now()-r.createdAt)}</span> 경과 · ${src(r)}</div>
       <div class="text-xl font-black text-white leading-tight">응급 신고 · ${esc(r.locationLabel)}</div>
