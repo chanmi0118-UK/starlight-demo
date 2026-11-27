@@ -323,14 +323,21 @@ const loading = '<div class="p-8 text-center text-slate-500">불러오는 중…
 const SCREENS = {
 HOME(){
   const cards=[['band-'+BAND_TOKEN['0001'],'팔찌 #0001','관객 폰 · 처음엔 등록, 다시 찍으면 신고'],['band-'+BAND_TOKEN['0002'],'팔찌 #0002','예시 등록 팔찌 · 스태프 폰으로 찍으면 환자 확인'],['band-'+BAND_TOKEN['0003'],'팔찌 #0003','다음 날 받은 새 팔찌 · 불러오기 코드로 정보 연결'],
-    ['qr-STAND-C','스탠딩 C구역 펜스 기둥','시연판 · 실제는 와이파이·문자 신고 QR'],['staff','STAFF 전용','스태프 폰으로 찍기']];
+    ['qr-STAND-C','스탠딩 C구역 펜스 기둥','시연판 · 실제는 와이파이·문자 신고 QR']];
   return `<div class="min-h-[100dvh] max-w-6xl mx-auto flex flex-col">${lhdr('응급 팔찌 시연',pill('QR 허브','text-brand bg-red-50'))}
   <div class="flex-1 p-5 sm:p-8 flex flex-col gap-5 safe-b">
-    <div><h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">폰 카메라로 QR을 찍으세요</h1>
-      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰·스태프 폰으로 각자 QR을 찍으면 그 화면이 열립니다. 스태프·모니터 화면은 시연용 코드 0000으로 한 번 로그인하면 계속 유지돼요.</p></div>
+    <div><h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">관객은 팔찌 QR을 찍으세요</h1>
+      <p class="text-slate-600 text-sm sm:text-base mt-1.5 leading-relaxed">이 화면을 노트북에 띄워 두고, 관객 폰 카메라로 팔찌 QR을 찍으면 신고·등록 화면이 열립니다.</p></div>
     <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">${cards.map(([h,t,s])=>`<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
       <div class="qr" data-qr="${APP}?v=${LOADV}#${h}"></div><b class="text-base font-extrabold text-slate-900">${t}</b><span class="text-xs text-slate-500">${s}</span></div>`).join('')}</div>
-    <button class="${BTN_RED} max-w-md self-center" data-act="toMonitor">${ic('display')} 이 노트북을 응급처치실 모니터로 쓰기</button>
+    <div class="bg-slate-900 text-white rounded-2xl p-5 flex flex-col gap-3">
+      <div><h2 class="text-lg font-extrabold">스태프·응급처치실은 QR을 찍지 않아요</h2>
+        <p class="text-sm text-slate-300 mt-1 leading-relaxed">근무 전에 받은 링크로 화면을 열고 한 번 로그인해 두면, 근무가 끝날 때까지 신고 알림이 와요. (시연용 근무 코드 0000)</p></div>
+      <div class="flex flex-wrap gap-2">
+        <button class="min-h-[48px] px-4 rounded-xl bg-brand hover:bg-[#b00d27] font-bold text-sm" data-act="toStaff">${ic('mobile-screen')} 이 기기로 스태프 화면 열기</button>
+        <button class="min-h-[48px] px-4 rounded-xl bg-white/10 hover:bg-white/15 font-bold text-sm" data-act="toMonitor">${ic('display')} 이 기기를 응급처치실 모니터로</button>
+        <button class="min-h-[48px] px-4 rounded-xl bg-white/10 hover:bg-white/15 font-bold text-sm" data-act="copyStaff">${ic('link')} 스태프 링크 복사</button></div>
+      <p class="text-xs text-slate-400 break-all">스태프 링크: ${esc(APP)}#staff</p></div>
     ${foot}</div></div>`;
 },
 
@@ -829,6 +836,8 @@ const ACT = {
   scanClose(){ stopScan(); },
   manualVerify(){ const v=($('bandno').value||'').replace(/\D/g,'').padStart(4,'0'); if(!BANDS.includes(v)) return toast('팔찌 번호를 찾지 못했어요'); staffVerify(v); },
   toMonitor(){ location.hash='monitor'; route(); },
+  toStaff(){ location.hash='staff'; route(); },
+  async copyStaff(){ const u=APP+'#staff'; try{ await navigator.clipboard.writeText(u); toast('스태프 링크를 복사했어요. 스태프 폰으로 보내 두세요'); }catch(e){ toast(u); } },
   toHome(){ dset('role',null); location.hash='home'; route(); },
   toS1(){ go('S1'); },
   toS2(id){ go('S2',{id}); },
